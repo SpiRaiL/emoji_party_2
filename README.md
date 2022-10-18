@@ -26,5 +26,5 @@ This is tested on Windows 10 and Chrome 106.0.5249.119
 
 ## License
 
-My code is all under the Lib directory and is free open source under under CC0 1.0 (see file)
+My code is all under the Lib directory and is free open source under under [ CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/)
 Everything else is flutter generated files.
