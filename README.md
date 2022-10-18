@@ -6,7 +6,7 @@ This is intended as an example flutter project that demonstrates:
 * Add, select and delete items
 * Reorder the height of items
 
-![In app screenshot](https://github.com/SpiRaiL/emoji_party/screenshots/Screenshot_2022-10-18_230405.jpg?raw=true)
+![In app screenshot](./screenshots/Screenshot_2022-10-18_230405.jpg?raw=true "Screenshot")
 
 In terms of flutter features this means:
 
