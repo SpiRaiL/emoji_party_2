@@ -1,16 +1,30 @@
 # emoji_party
 
-A new Flutter project.
+This is intended as an example flutter project that demonstrates:
 
-## Getting Started
+* Drag and drop items on the screen.
+* Add, select and delete items
+* Reorder the height of items
 
-This project is a starting point for a Flutter application.
+![In app screenshot](./screenshots/Screenshot_2022-10-18_230405.jpg?raw=true "Screenshot")
 
-A few resources to get you started if this is your first Flutter project:
+In terms of flutter features this means:
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+* Draggable and positional use of multiple widgets
+* Passing a data model/class down to widgets
+* Changing the data and updating widgets including Set_state()
+* Object keys
+* Some basic documentation.
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+This small project is a personal learning exercise. Feel free to fork and pull request for minor changes.
+
+Feel free to make tutorial video based on this code. I won't change it much (although I still recommend you make your own fork). I'd be glad to hear about it.
+
+## Testing
+
+This is tested on Windows 10 and Chrome 106.0.5249.119
+
+## License
+
+My code is all under the Lib directory and is free open source under under [ CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/)
+Everything else is flutter generated files.
