@@ -19,12 +19,22 @@ class _MyAppState extends State<MyApp> {
   /// but only the data
   /// the the "name" which can be just an emoji
   /// and the background color.
-  List<Block> blocks = [Block(generate: true, emoji: true)];
+  late BlockSet blockSet;
 
   /// Function could be improved with a selected blocks group
   /// List<Block> selectedBlocks = [];
 
   static const Color iconColor = Colors.blue;
+
+  void applySetState() {
+    setState(() {});
+  }
+
+  @override
+  void initState() {
+    blockSet = BlockSet(setStateCallback: applySetState);
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -47,111 +57,56 @@ class _MyAppState extends State<MyApp> {
                     Icons.add,
                     color: iconColor,
                   ),
-                  onPressed: _addBlock
-
-                  /// do something
-                  ),
+                  onPressed: () {
+                    setState(() {
+                      blockSet.addBlock();
+                    });
+                  }),
 
               actions: [
                 IconButton(
-                    onPressed: _reGenerate,
+                    onPressed: () {
+                      setState(() {
+                        blockSet.reGenerate();
+                      });
+                    },
                     icon: const Icon(Icons.refresh, color: iconColor)),
                 IconButton(
-                    onPressed: _toTop,
+                    onPressed: () {
+                      setState(() {
+                        blockSet.toTop();
+                      });
+                    },
                     icon: const Icon(Icons.arrow_upward, color: iconColor)),
                 IconButton(
-                    onPressed: _toBottom,
+                    onPressed: () {
+                      setState(() {
+                        blockSet.toBottom();
+                      });
+                    },
                     icon: const Icon(Icons.arrow_downward, color: iconColor)),
                 IconButton(
-                    onPressed: _deleteSelected,
+                    onPressed: () {
+                      setState(() {
+                        blockSet.deleteSelected();
+                      });
+                    },
                     icon: const Icon(Icons.delete, color: iconColor)),
                 IconButton(
-                    onPressed: _selectAllOrNone,
+                    onPressed: () {
+                      setState(() {
+                        blockSet.selectAllOrNone();
+                      });
+                    },
                     icon: const Icon(Icons.select_all, color: iconColor)),
               ],
             ),
-            body: InteractiveViewer(
-                child: Stack(
-              clipBehavior: Clip.none,
-
-              /// Maps each item in blocks to a widget.
-              /// Object key is needed for _deleteSelected
-              /// lookup object keys for more info
-              children: blocks
-                  .map<Widget>((block) => BlockWidget(
-                        key: ObjectKey(block),
-                        blockData: block,
-                      ))
-                  .toList(),
-            ))));
-  }
-
-  /// Various button functions.
-  void _addBlock() {
-    /// Add a block to the list of blocks
-    setState(() {
-      blocks.add(Block(generate: true, emoji: true));
-    });
-  }
-
-  void _deleteSelected() {
-    setState(() {
-      blocks.removeWhere((block) => block.selected);
-    });
-  }
-
-  void _selectAllOrNone() {
-    int count = blocks.where((block) => block.selected).length;
-    setState(() {
-      /// If they are all selected
-      if (count == blocks.length) {
-        /// Select None
-        for (Block block in blocks) {
-          block.selected = false;
-        }
-      } else {
-        /// Select all
-        for (Block block in blocks) {
-          block.selected = true;
-        }
-      }
-    });
-  }
-
-  void _toTop() {
-    /// Move selected items to the top of the stack
-    /// ie: the end of the list
-    setState(() {
-      List<Block> selected = blocks.where((block) => block.selected).toList();
-
-      for (Block block in selected) {
-        int index = blocks.indexOf(block);
-        blocks.insert(blocks.length - 1, blocks.removeAt(index));
-      }
-    });
-  }
-
-  void _toBottom() {
-    /// Move selected items to the bottom of the stack
-    /// ie: the start of the list
-    setState(() {
-      List<Block> selected = blocks.where((block) => block.selected).toList();
-
-      for (Block block in selected.reversed) {
-        int index = blocks.indexOf(block);
-        blocks.insert(0, blocks.removeAt(index));
-      }
-    });
-  }
-
-  void _reGenerate() {
-    /// Re-roll the emoji, in the same place in the stack
-    setState(() {
-      List<Block> selected = blocks.where((block) => block.selected).toList();
-
-      for (Block block in selected) {
-        block.generateData(emoji: true);
-      }
-    });
+            body: Stack(
+                children: blockSet.allBlocks
+                    .map<Widget>((block) => BlockWidget(
+                          block: block,
+                          key: ObjectKey(block),
+                        ))
+                    .toList())));
   }
 }
