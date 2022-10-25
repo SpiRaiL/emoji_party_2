@@ -4,6 +4,9 @@ Developements on top of [emoji_party_1](https://github.com/SpiRaiL/emoji_party_1
 
 Adds group select and resizable widgets using gesture control.
 
+## Latest screen shot
+![In app screenshot](./screenshots/Screenshot.png?raw=true "Screenshot")
+
 ## What is this project?
 “Emoji party” is an open-source project that I am working on.
 
