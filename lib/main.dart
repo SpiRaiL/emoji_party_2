@@ -99,6 +99,13 @@ class _MyAppState extends State<MyApp> {
                       });
                     },
                     icon: const Icon(Icons.select_all, color: iconColor)),
+                IconButton(
+                    onPressed: () {
+                      setState(() {
+                        blockSet.experimental = !blockSet.experimental;
+                      });
+                    },
+                    icon: const Icon(Icons.info, color: iconColor)),
               ],
             ),
             body: Stack(
