@@ -1,18 +1,76 @@
 // A specific model class for just block data.
 // No widget building data
 
-import 'dart:convert';
 import 'dart:math';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_emoji/flutter_emoji.dart';
+import 'dart:developer' as developer;
+import 'emoji.dart';
+
+class Block {
+  /// Block class
+  ///
+  /// This houses just the data of what is in each block,
+  /// and the method of generating the data.
+  /// You can set a color and a name (some text to appear on the page)
+  /// or you can generate some random data to play with
+  EmojiData emoji;
+
+  /// Offset is the position of the block.
+  /// It needs to be store in the data as it needs to be accessible
+  /// by multiple widgets when grouping
+  Offset offset = Offset.zero;
+  Size size = const Size(100, 100);
+
+  /// Experimental
+  double rotation = 0;
+
+  // The height of the block. How many blocks are under this block
+  int blockHeight = 0;
+
+  /// A reference to the block set where this blocks belongs is required to
+  /// be able to make changes on other blocks
+  /// for example blocks in a selected group
+  final BlockSet blockSet;
+
+  Block({required this.emoji, required this.blockSet});
+
+  bool isSelected() {
+    return blockSet.isBlockSelected(this);
+  }
+
+  void select(bool trueFalse) {
+    blockSet.selectBlock(this, trueFalse);
+  }
+
+  void toggleSelect() {
+    blockSet.toggleSelectBlock(this);
+  }
+}
+
+class BlockRelation {
+  /// A block relation defines how two blocks are connected to each other
+
+  Block thisBlock;
+  BlockRelationType type;
+  Block thatBlock;
+
+  BlockRelation(this.thisBlock, this.type, this.thatBlock);
+}
+
+enum BlockRelationType { hasBlockChild }
 
 class BlockSet {
   /// A class for all the relevant block data as a full group
   List<Block> allBlocks = [];
   List<Block> selectedBlocks = [];
+  List<BlockRelation> relations = [];
 
-  /// [setStateCallback] is currently needed for dragging a selected group
+  /// Extra functionality and details about the block
+  bool experimental = false;
+
+  final EmojiGenerator _emojiGenerator = EmojiGenerator();
+
+  /// [updateCallback] is currently needed for dragging a selected group
   /// This is because setState at this level is only able to rerender the
   /// widget being dragged.
   Function setStateCallback;
@@ -21,9 +79,168 @@ class BlockSet {
     addBlock();
   }
 
+  bool blockIsInside(Block a, Block b) {
+    /// Check if one blocks position is inside another
+    if (a.offset.dx > b.offset.dx &&
+        a.offset.dx + a.size.width < b.offset.dx + b.size.width &&
+        a.offset.dy > b.offset.dy &&
+        a.offset.dy + a.size.height < b.offset.dy + b.size.height) {
+      return true;
+    }
+    // developer.log('outside', name: "test");
+    return false;
+  }
+
+  void piggyBackSort(Block block, {bool update = false}) {
+    /// Cycle all blocks and work how who overlaps who
+    /// [block] focuses on the block that is changed
+    /// [update] calls the updateCallBack function. Default = false
+
+    /// Scroll down form the "top" and place this block above any
+    /// that surround it
+    for (int index = allBlocks.length - 1;
+        index > allBlocks.indexOf(block);
+        index--) {
+      if (blockIsInside(block, allBlocks[index])) {
+        if (experimental) {
+          developer.log(
+              '${block.emoji.emoji} 🔼 ${allBlocks[index].emoji.emoji}',
+              name: "piggyBack");
+        }
+
+        /// Drop the block from where it is
+        allBlocks.remove(block);
+
+        /// Since the block we are putting on top of already slips down
+        /// from the removal action, we can just insert at this point.
+        allBlocks.insert(index, block);
+        break;
+      }
+    }
+
+    /// Now go up from the bottom to see if we went under anything smaller
+    for (int index = 0; index < allBlocks.indexOf(block); index++) {
+      if (blockIsInside(allBlocks[index], block)) {
+        if (experimental) {
+          developer.log(
+              '${block.emoji.emoji} 🔽 ${allBlocks[index].emoji.emoji}',
+              name: "piggyBack");
+        }
+        allBlocks.remove(block);
+        allBlocks.insert(index, block);
+        break;
+      }
+    }
+
+    calculateBlockHeights();
+
+    if (update) {
+      block.blockSet.updateCallback(block);
+    }
+  }
+
+  void calculateBlockHeights() {
+    /// Does what it says.
+    ///
+    /// Goes through all blocks form bottom to top and works out who
+    /// sits on top of who
+
+    /// For all blocks from the bottom up.
+    for (int i = 0; i < allBlocks.length; i++) {
+      Block a = allBlocks[i];
+      a.blockHeight = 0;
+      _disownParents(a);
+
+      if (i == 0) {
+        // Nothing under the bottom one
+        continue;
+      }
+
+      /// For all blocks from this block down
+      /// Find the highest block that intersects
+      /// Where highest is "has the most blocks under"
+      /// Not, the "highest index"
+      /// with block a.
+      for (int j = i - 1; j >= 0; j--) {
+        Block b = allBlocks[j];
+        // developer.log("compare ${i.toString()} to ${j.toString()}");
+        if (blocksIntersect(a, b)) {
+          if (b.blockHeight >= a.blockHeight) {
+            /// If b is equal higher than a.
+            /// we are moving a up, so we need to cut all its parent relations
+            _disownParents(a);
+          }
+          if (b.blockHeight >= a.blockHeight - 1) {
+            /// Then (or if its another block one lower)
+            /// we add the relationship form a to b.
+            relations.add(BlockRelation(b, BlockRelationType.hasBlockChild, a));
+            a.blockHeight = b.blockHeight + 1;
+          }
+        }
+      }
+    }
+  }
+
+  void _disownParents(Block block) {
+    /// relations go "this has child of that"
+    relations.removeWhere((element) => (element.thatBlock == block &&
+        element.type == BlockRelationType.hasBlockChild));
+  }
+
+  bool blocksIntersect(Block a, Block b) {
+    /// From google  "intersection of 2 rectangles"
+    /// This would find the actual area of intersection.
+    ///
+    // double xOverlap = max(
+    //     0,
+    //     min(a.offset.dx + a.size.width, b.offset.dx + b.size.width) -
+    //         max(a.offset.dx, b.offset.dx));
+    // double yOverlap = max(
+    //     0,
+    //     min(a.offset.dy + a.size.height, b.offset.dy + b.size.height) -
+    //         max(a.offset.dy, b.offset.dy));
+    // double intersection = xOverlap * yOverlap;
+
+    /// We only care about "if" there is intersection
+    /// So this simplifies to:
+
+    if (min(a.offset.dx + a.size.width, b.offset.dx + b.size.width) <=
+        max(a.offset.dx, b.offset.dx)) {
+      // The left most right side is less than the right-most left side
+      return false;
+    }
+
+    if (min(a.offset.dy + a.size.height, b.offset.dy + b.size.height) <=
+        max(a.offset.dy, b.offset.dy)) {
+      // The highest bottom side is higher than the lowest top size
+      return false;
+    }
+
+    if (experimental) {
+      developer.log(
+          '${a.emoji.emoji}'
+          '(${a.offset.dx}, ${a.offset.dx + a.size.width})'
+          '(${a.offset.dy}, ${a.offset.dy + a.size.height})'
+          ' intersects '
+          '${b.emoji.emoji}'
+          '(${b.offset.dx}, ${b.offset.dx + b.size.width})'
+          '(${b.offset.dy}, ${b.offset.dy + b.size.height})',
+          name: "piggyBack");
+    }
+    return true;
+  }
+
+  void updateCallback(Block block) {
+    /// Allows additional logic to happen before the callback executes
+    /// updates to the layout
+    /// [block] is the block that made this call
+
+    setStateCallback();
+  }
+
   void addBlock() {
     /// Add a block to the list of blocks
-    allBlocks.add(Block(generate: true, emoji: true, blockSet: this));
+    allBlocks.add(Block(emoji: _emojiGenerator.randomEmoji(), blockSet: this));
   }
 
   void deleteSelected() {
@@ -33,14 +250,12 @@ class BlockSet {
   }
 
   void selectAllOrNone() {
-    /// If they are all selected
-    if (selectedBlocks.length == allBlocks.length) {
-      /// Select None
-      selectedBlocks.clear();
-    } else {
-      /// Select all
-      selectedBlocks.clear();
+    /// Clears the selection
+    /// Selects all if already cleared
+    if (selectedBlocks.isEmpty) {
       selectedBlocks.addAll(allBlocks);
+    } else {
+      selectedBlocks.clear();
     }
   }
 
@@ -101,6 +316,7 @@ class BlockSet {
     for (Block block in selection) {
       int index = allBlocks.indexOf(block);
       allBlocks.insert(allBlocks.length - 1, allBlocks.removeAt(index));
+      piggyBackSort(block);
     }
   }
 
@@ -122,13 +338,14 @@ class BlockSet {
     for (Block block in selection.reversed) {
       int index = allBlocks.indexOf(block);
       allBlocks.insert(0, allBlocks.removeAt(index));
+      piggyBackSort(block);
     }
   }
 
   void reGenerate() {
     /// Re-roll the emoji, in the same place in the stack
     for (Block block in selectedBlocks) {
-      block.generateData(emoji: true);
+      block.emoji = _emojiGenerator.randomEmoji();
     }
   }
 
@@ -156,119 +373,35 @@ class BlockSet {
   bool toggleSelectBlock(Block block) {
     /// Toggles if the block is part of selected blocks
     /// [returns] if the block is selected
-    if (selectedBlocks.contains(block)) {
-      selectedBlocks.remove(block);
-      return false;
+    bool selected = selectedBlocks.contains(block);
+    if (selected) {
+      _selectBlockAndChildren(block, false);
     } else {
+      _selectBlockAndChildren(block, true);
+    }
+    updateCallback(block);
+
+    return !selected; // flip selected
+  }
+
+  void _selectBlockAndChildren(Block block, bool select) {
+    /// Add and remove if necessary
+    if (select && !selectedBlocks.contains(block)) {
       selectedBlocks.add(block);
-      return true;
+    }
+    if (!select && selectedBlocks.contains(block)) {
+      selectedBlocks.remove(block);
+    }
+
+    /// Iterate the relationships to select the child blocks as well.
+    for (BlockRelation relation in relations.where((relation) =>
+        relation.thisBlock == block &&
+        relation.type == BlockRelationType.hasBlockChild)) {
+      _selectBlockAndChildren(relation.thatBlock, select);
     }
   }
 
   bool isBlockSelected(Block block) {
     return selectedBlocks.contains(block);
-  }
-}
-
-/// A big list of emojis
-List<String> _emojiList = [];
-List<String> _emojiNames = [];
-
-void buildEmojiMap() {
-  /// Pull the emojis out of the huge list of them in the
-  /// flutter emoji library.
-  /// This function is copied from the _init() function in that library
-  /// and simplified to be just a list of strings.
-  Map<String, dynamic> mapEmojis = jsonDecode(EmojiParser.JSON_EMOJI);
-  mapEmojis.forEach((key, value) {
-    /// Example of a platform check
-    /// The flag emojis don't render well on windows 10
-    if (!(defaultTargetPlatform == TargetPlatform.windows &&
-        key.contains("flag-"))) {
-      _emojiNames.add(key);
-      _emojiList.add(value);
-    }
-  });
-}
-
-class Block {
-  /// Block class
-  ///
-  /// This houses just the data of what is in each block,
-  /// and the method of generating the data.
-  /// You can set a color and a name (some text to appear on the page)
-  /// or you can generate some random data to play with
-
-  Color color;
-  String displayName;
-  String details;
-
-  /// Offset is the position of the block.
-  /// It needs to be store in the data as it needs to be accessible
-  /// by multiple widgets when grouping
-  Offset offset = Offset.zero;
-  Size size = const Size(100, 100);
-
-  /// A reference to the block set where this blocks belongs is required to
-  /// be able to make changes on other blocks
-  /// for example blocks in a selected group
-  final BlockSet blockSet;
-
-  Block(
-      {this.color = Colors.white,
-      this.displayName = "None",
-      this.details = "None",
-      generate = false,
-      emoji = false,
-      required this.blockSet}) {
-    if (generate) {
-      generateData(emoji: emoji);
-    }
-  }
-
-  bool isSelected() {
-    return blockSet.isBlockSelected(this);
-  }
-
-  void select(bool trueFalse) {
-    blockSet.selectBlock(this, trueFalse);
-  }
-
-  void toggleSelect() {
-    blockSet.toggleSelectBlock(this);
-  }
-
-  generateData({emoji = false}) {
-    /// Is its own function so that it can be called
-    /// by the app-bar buttons
-    var random = Random();
-    final double hue = random.nextDouble() * 360;
-    color = HSLColor.fromAHSL(1, hue, 1, 0.85).toColor();
-
-    if (emoji) {
-      /// Pick from some random range of unicode values
-      /// check for an emoji or try again.
-      /// clearly could be better
-
-      ///  Generate the emoji list if we need it (one time)
-      if (_emojiList.isEmpty) {
-        buildEmojiMap();
-      }
-
-      /// Get a random index from the list.
-      int index = Random().nextInt(_emojiList.length);
-      displayName = _emojiList[index];
-      details = _emojiNames[index];
-    } else {
-      /// Just some random text instead
-      var random = Random();
-
-      /// Make a random 3 char string
-      const String chars =
-          'AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890';
-      const int length = 3;
-      displayName = String.fromCharCodes(Iterable.generate(
-          length, (_) => chars.codeUnitAt(random.nextInt(chars.length))));
-    }
   }
 }

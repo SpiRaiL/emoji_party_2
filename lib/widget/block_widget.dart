@@ -1,7 +1,6 @@
 library block_library;
 
 import 'dart:math';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../model/block.dart';
@@ -13,6 +12,7 @@ class BlockWidget extends StatefulWidget {
   /// Below is the Block internal widget.
 
   const BlockWidget({required this.block, super.key});
+
   final Block block;
 
   @override
@@ -25,57 +25,169 @@ class _BlockWidgetState extends State<BlockWidget> {
   final double appBarHeight = 50;
 
   // The size of edge where the user can resize the widget
-  final double sizeHandleSize = 10;
-  final double minimumBlockSize = 25;
+  final double sizeHandleSize = 20;
 
   @override
   Widget build(BuildContext context) {
-    Block block = widget.block;
     return Positioned(
-        left: block.offset.dx,
-        top: block.offset.dy,
-        child: InkWell(
-          onTap: () {
-            setState(() {
-              block.toggleSelect();
-            });
-          },
-          child: Stack(children: [
-            Draggable(
-
-                /// Check if selected here
-                feedback: block.isSelected()
-                    ? BlockSelectedInternal(block: block)
-                    : BlockInternal(block: block, dragging: true),
-                onDragEnd: (dragDetails) {
-                  /// Get the distance moved
-                  Offset offsetDiff =
-                      dragDetails.offset.translate(0, -appBarHeight) -
-                          block.offset;
-
-                  if (block.isSelected()) {
-                    /// Move and update all the selected blocks
-                    for (Block block in block.blockSet.selectedBlocks) {
-                      block.offset += offsetDiff;
-                    }
-                    block.blockSet.setStateCallback();
-                  } else {
-                    /// Just move and update this block
-                    setState(() {
-                      block.offset += offsetDiff;
-                    });
-                  }
+        left: widget.block.offset.dx,
+        top: widget.block.offset.dy,
+        child: Transform.rotate(
+            angle:
+                widget.block.blockSet.experimental ? widget.block.rotation : 0,
+            child: SizedBox(
+              height: widget.block.size.height,
+              width: widget.block.size.width,
+              child: InkWell(
+                onTap: () {
+                  widget.block.toggleSelect();
                 },
-                child: BlockInternal(block: block, dragging: false)),
-            _resizeHandle(SystemMouseCursors.resizeLeft),
-            _resizeHandle(SystemMouseCursors.resizeRight),
-            _resizeHandle(SystemMouseCursors.resizeUp),
-            _resizeHandle(SystemMouseCursors.resizeDown),
-          ]),
+                child: Stack(children: [
+                  _dragHandle(),
+
+                  /// The 8 resize widgets around the edge of the block
+                  _resizeHandleEdge(SystemMouseCursors.resizeLeft),
+                  _resizeHandleEdge(SystemMouseCursors.resizeRight),
+                  _resizeHandleEdge(SystemMouseCursors.resizeUp),
+                  _resizeHandleEdge(SystemMouseCursors.resizeDown),
+                  _resizeHandleCorner(SystemMouseCursors.resizeDownRight),
+                  _resizeHandleCorner(SystemMouseCursors.resizeUpLeft),
+                  widget.block.blockSet.experimental
+                      ? _rotateHandleCorner(SystemMouseCursors.resizeDownLeft)
+                      : _resizeHandleCorner(SystemMouseCursors.resizeDownLeft),
+                  widget.block.blockSet.experimental
+                      ? _rotateHandleCorner(SystemMouseCursors.resizeUpRight)
+                      : _resizeHandleCorner(SystemMouseCursors.resizeUpRight),
+                  widget.block.blockSet.experimental
+                      ? _debugStackInfo()
+                      : Container(),
+                ]),
+              ),
+            )));
+  }
+
+  Widget _debugStackInfo() {
+    /// In debug show the index in the stack of blocks
+    /// This is the true render height of the block
+    double debugSize = 10;
+    int index = widget.block.blockSet.allBlocks.indexOf(widget.block);
+    int height = widget.block.blockHeight;
+    int childCount = widget.block.blockSet.relations
+        .where((element) =>
+            element.thisBlock == widget.block &&
+            element.type == BlockRelationType.hasBlockChild)
+        .length;
+    int parentCount = widget.block.blockSet.relations
+        .where((element) =>
+            element.thatBlock == widget.block &&
+            element.type == BlockRelationType.hasBlockChild)
+        .length;
+    return Positioned(
+      top: debugSize,
+      left: debugSize,
+      child: Tooltip(
+        message: "Index(in stack), Height, #Parents, #Children",
+        child: SizedBox(
+          height: widget.block.size.width - 2 * debugSize, //debugSize * 2,
+          width: 3 * debugSize,
+          child: Text("i:$index\n"
+              "H:$height\n"
+              "P:$parentCount\n"
+              "C:$childCount"),
+        ),
+      ),
+    );
+  }
+
+  Widget _dragHandle() {
+    /// Gives the ability to drag the block around
+    Block block = widget.block;
+
+    return GestureDetector(
+      onPanUpdate: (details) {
+        List<Block> selected = [block];
+
+        if (block.isSelected()) {
+          selected = block.blockSet.selectedBlocks;
+        }
+        for (Block select in selected) {
+          select.offset = Offset(select.offset.dx + details.delta.dx,
+              select.offset.dy + details.delta.dy);
+        }
+        block.blockSet.updateCallback(block);
+      },
+      onPanEnd: (details) {
+        List<Block> selected = [block];
+
+        if (block.isSelected()) {
+          selected = block.blockSet.selectedBlocks;
+        }
+        for (Block select in selected) {
+          block.blockSet.piggyBackSort(select);
+        }
+
+        block.blockSet.updateCallback(block);
+      },
+      child: BlockInternal(block: block),
+    );
+  }
+
+  Positioned _rotateHandleCorner(SystemMouseCursor direction) {
+    /// Scale the block by dragging on the corner
+    /// This currently messes up the other handles.
+    /// So its only here as demo code for block rotation.
+
+    bool left = direction == SystemMouseCursors.resizeDownLeft;
+    bool top = direction == SystemMouseCursors.resizeUpRight;
+    return Positioned(
+        left: left ? 0 : widget.block.size.width - sizeHandleSize,
+        top: top ? 0 : widget.block.size.height - sizeHandleSize,
+        child: MouseRegion(
+          cursor: direction,
+          child: GestureDetector(
+            onPanUpdate: (details) {
+              setState(() {
+                widget.block.rotation = details.localPosition.direction;
+              });
+            },
+            child: SizedBox(
+              width: sizeHandleSize,
+              height: sizeHandleSize,
+              // color: Colors.transparent,
+              child: const Icon(Icons.rotate_left),
+            ),
+          ),
         ));
   }
 
-  Positioned _resizeHandle(SystemMouseCursor direction) {
+  Positioned _resizeHandleCorner(SystemMouseCursor direction) {
+    // Scale the block by dragging on the corner
+    bool left = [
+      SystemMouseCursors.resizeUpLeft,
+      SystemMouseCursors.resizeDownLeft
+    ].contains(direction);
+    bool top = [
+      SystemMouseCursors.resizeUpLeft,
+      SystemMouseCursors.resizeUpRight
+    ].contains(direction);
+    return Positioned(
+        left: left ? 0 : widget.block.size.width - sizeHandleSize,
+        top: top ? 0 : widget.block.size.height - sizeHandleSize,
+        child: MouseRegion(
+          cursor: direction,
+          child: GestureDetector(
+            onPanUpdate: (details) => _updateSize(direction, details),
+            onPanEnd: ((details) => widget.block.blockSet
+                .piggyBackSort(widget.block, update: true)),
+            child: Container(
+                width: sizeHandleSize,
+                height: sizeHandleSize,
+                color: Colors.transparent),
+          ),
+        ));
+  }
+
+  Positioned _resizeHandleEdge(SystemMouseCursor direction) {
     /// Generates an area on the side of the widget that
     /// allows it to be resized along that axis
     Block block = widget.block;
@@ -104,8 +216,14 @@ class _BlockWidgetState extends State<BlockWidget> {
           child: GestureDetector(
               onHorizontalDragUpdate: ((details) =>
                   left || right ? _updateSize(direction, details) : null),
+              onHorizontalDragEnd: ((details) => left || right
+                  ? block.blockSet.piggyBackSort(block, update: true)
+                  : null),
               onVerticalDragUpdate: ((details) =>
                   up || down ? _updateSize(direction, details) : null),
+              onVerticalDragEnd: ((details) => up || down
+                  ? block.blockSet.piggyBackSort(block, update: true)
+                  : null),
               child: Container(
                 /// The size of the handle itself
                 width: left || right
@@ -126,12 +244,32 @@ class _BlockWidgetState extends State<BlockWidget> {
     /// widget.
     Block block = widget.block;
     // Shorthand for directions
-    bool left = direction == SystemMouseCursors.resizeLeft;
-    bool up = direction == SystemMouseCursors.resizeUp;
+    bool left = [
+      SystemMouseCursors.resizeLeft,
+      SystemMouseCursors.resizeUpLeft,
+      SystemMouseCursors.resizeDownLeft
+    ].contains(direction);
+
+    bool up = [
+      SystemMouseCursors.resizeUp,
+      SystemMouseCursors.resizeUpLeft,
+      SystemMouseCursors.resizeUpRight
+    ].contains(direction);
+
+    final double minimumBlockSize = sizeHandleSize * 3;
+
     return setState(() {
+      /// left and up sides need to control the position as well as the scale
       if (left || up) {
-        block.offset = Offset(block.offset.dx + details.delta.dx,
-            block.offset.dy + details.delta.dy);
+        double dx = block.offset.dx;
+        double dy = block.offset.dy;
+        if (left && block.size.width > minimumBlockSize) {
+          dx += details.delta.dx;
+        }
+        if (up && block.size.height > minimumBlockSize) {
+          dy += details.delta.dy;
+        }
+        block.offset = Offset(dx, dy);
       }
 
       block.size = Size(
@@ -143,53 +281,6 @@ class _BlockWidgetState extends State<BlockWidget> {
   }
 }
 
-class BlockSelectedInternal extends StatelessWidget {
-  /// This is used when we drag a selected item
-  /// Rather than showing just one BlockInternal dragging,
-  /// We also need to show all the other selected blocks dragging
-
-  const BlockSelectedInternal({required this.block, super.key});
-  final Block block;
-
-  @override
-  Widget build(BuildContext context) {
-    /// A large container housing is needed to allow this stack to exist in the
-    /// parent draggable stack. Otherwise the system crashes.
-    /// It has something to do with other widgets not knowing what size to be.
-    ///
-    /// The next issue is that the container starts at the top left of the
-    /// dragging widget. As such no selected items above or left will be visible
-    /// To solve this we translate the entire container back to top-left corner
-    /// of the page. (try with Debug painting)
-    /// This is easy info, since we have stored this value in the blocks
-    /// co-ordinates. Theoretically a Positioned widget would solve this.
-    /// However positioned has the same issue as above. As such, we
-    /// can solve this instead using the transform function in the Container.
-    return Container(
-        height: 5000,
-        width: 5000,
-        transform:
-            Matrix4.translationValues(-block.offset.dx, -block.offset.dy, 0),
-        clipBehavior: Clip.none,
-        child: Stack(
-            children: block.blockSet
-                .selectedInOrder()
-                .map<Widget>((selectBlock) => Positioned(
-
-                    /// This "should" be the difference between this
-                    /// blocks position and the one that we started dragging
-                    /// however, the difference is already taken into account
-                    /// by the Matrix4.translation.
-                    left: selectBlock.offset.dx,
-                    top: selectBlock.offset.dy,
-                    child: BlockInternal(
-                      block: selectBlock,
-                      dragging: true,
-                    )))
-                .toList()));
-  }
-}
-
 class BlockInternal extends StatelessWidget {
   /// BlockInternal is what the user sees on the screen.
   /// This is stateless as is it rendered on creation.
@@ -198,58 +289,57 @@ class BlockInternal extends StatelessWidget {
   /// just doesn't work like that
 
   final Block block;
-  final bool dragging;
   // Internal block offset relative to parent
 
   static const double resizeBorderWidth = 20;
 
   const BlockInternal({
     required this.block,
-    this.dragging = false,
     super.key,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Opacity(
-        opacity: dragging ? 0.75 : 1,
-        child: Material(
+    return Material(
 
-            /// Stops any text being red. Needs to be after opacity.
-            child: Container(
-                height: block.size.height * (dragging ? 1.2 : 1),
-                width: block.size.width * (dragging ? 1.2 : 1),
+        /// Stops any text being red. Needs to be after opacity.
+        child: Container(
 
-                /// Allows box decoration and padding
-                decoration: BoxDecoration(
-                  color: block.color,
+            /// Allows box decoration and padding
+            decoration: BoxDecoration(
+              color: block.emoji.color,
 
-                  /// The block boarder is only highlighted if the block is selected
-                  border: Border.all(
-                      width: 3,
-                      style: block.isSelected()
-                          ? BorderStyle.solid
-                          : BorderStyle.none,
-                      color: const Color.fromARGB(255, 255, 107, 107)),
-                  borderRadius: BorderRadius.circular(5),
-                  boxShadow: const [
-                    BoxShadow(
-                      color: Color.fromARGB(255, 66, 66, 66),
-                      spreadRadius: 0,
-                      offset: Offset(2, 2),
-                      blurStyle: BlurStyle.normal,
-                      blurRadius: 2,
-                    ),
-                  ],
+              /// The block boarder is only highlighted if the block is selected
+              border: Border.all(
+                  width: 3,
+                  style:
+                      block.isSelected() ? BorderStyle.solid : BorderStyle.none,
+                  color: const Color.fromARGB(255, 255, 107, 107)),
+              borderRadius: BorderRadius.circular(5),
+              boxShadow: const [
+                BoxShadow(
+                  color: Color.fromARGB(255, 66, 66, 66),
+                  spreadRadius: 0,
+                  offset: Offset(2, 2),
+                  blurStyle: BlurStyle.normal,
+                  blurRadius: 2,
                 ),
-                padding: const EdgeInsets.all(5),
-                child: FittedBox(
-                    fit: BoxFit.contain,
-                    child: Tooltip(
-                        message: block.details,
-                        child: Text(
-                          block.displayName,
-                          // style: TextStyle(fontSize: dragging ? 30 : 25),
-                        ))))));
+              ],
+            ),
+            padding: const EdgeInsets.all(5),
+            child: Center(
+                child: SizedBox(
+              width: 80,
+              height: 80,
+              child: FittedBox(
+                fit: BoxFit.contain,
+                child: Tooltip(
+                    message: block.emoji.emojiName,
+                    child: Text(
+                      block.emoji.emoji,
+                      // style: TextStyle(fontSize: dragging ? 30 : 25),
+                    )),
+              ),
+            ))));
   }
 }
