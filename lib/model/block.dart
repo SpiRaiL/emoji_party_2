@@ -2,8 +2,10 @@
 // No widget building data
 
 import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'dart:developer' as developer;
+
 import 'emoji.dart';
 
 class Block {
@@ -45,6 +47,55 @@ class Block {
   void toggleSelect() {
     blockSet.toggleSelectBlock(this);
   }
+
+  Offset edgeCenter(AxisDirection direction) {
+    /// Get the coordinate of the center of the blocks edge in the
+    /// given direction
+    switch (direction) {
+      case AxisDirection.up:
+        return Offset(offset.dx + size.width / 2, offset.dy);
+      case AxisDirection.down:
+        return Offset(offset.dx + size.width / 2, offset.dy + size.height);
+      case AxisDirection.left:
+        return Offset(offset.dx, offset.dy + size.height / 2);
+      case AxisDirection.right:
+        return Offset(offset.dx + size.width, offset.dy + size.height / 2);
+      default:
+        return const Offset(0, 0);
+    }
+  }
+
+  List<AxisDirection> getClosestEdges(Block block) {
+    // Get the closest edges between two blocks
+    List<AxisDirection> allDirections = [
+      AxisDirection.up,
+      AxisDirection.down,
+      AxisDirection.left,
+      AxisDirection.right
+    ];
+
+    double distance = double.infinity;
+
+    List<AxisDirection> edges = [];
+
+    for (AxisDirection dirA in allDirections) {
+      for (AxisDirection dirB in allDirections) {
+        double newDistance =
+            (edgeCenter(dirA) - block.edgeCenter(dirB)).distance;
+
+        /// Slightly favour right over left
+        /// this only applies when blocks are exactly the same size
+        if ([dirA, dirB].contains(AxisDirection.right)) {
+          newDistance -= 0.001;
+        }
+        if (newDistance < distance) {
+          distance = newDistance;
+          edges = [dirA, dirB];
+        }
+      }
+    }
+    return edges;
+  }
 }
 
 class BlockRelation {
@@ -57,7 +108,7 @@ class BlockRelation {
   BlockRelation(this.thisBlock, this.type, this.thatBlock);
 }
 
-enum BlockRelationType { hasBlockChild }
+enum BlockRelationType { hasBlockChild, hasReceiver }
 
 class BlockSet {
   /// A class for all the relevant block data as a full group
@@ -68,7 +119,7 @@ class BlockSet {
   /// Extra functionality and details about the block
   bool experimental = false;
 
-  final EmojiGenerator _emojiGenerator = EmojiGenerator();
+  final EmojiGenerator emojiGenerator = EmojiGenerator();
 
   /// [updateCallback] is currently needed for dragging a selected group
   /// This is because setState at this level is only able to rerender the
@@ -240,12 +291,16 @@ class BlockSet {
 
   void addBlock() {
     /// Add a block to the list of blocks
-    allBlocks.add(Block(emoji: _emojiGenerator.randomEmoji(), blockSet: this));
+    allBlocks.add(Block(emoji: emojiGenerator.randomEmoji(), blockSet: this));
   }
 
   void deleteSelected() {
-    // delete the selected blocks
+    // delete the selected blocks from the main list
     allBlocks.removeWhere((block) => selectedBlocks.contains(block));
+    // delete all their associated relations as well
+    relations.removeWhere((relation) =>
+        selectedBlocks.contains(relation.thisBlock) ||
+        selectedBlocks.contains(relation.thisBlock));
     selectedBlocks.clear();
   }
 
@@ -342,11 +397,19 @@ class BlockSet {
     }
   }
 
-  void reGenerate() {
+  void randomEmoji() {
     /// Re-roll the emoji, in the same place in the stack
     for (Block block in selectedBlocks) {
-      block.emoji = _emojiGenerator.randomEmoji();
+      block.emoji = emojiGenerator.randomEmoji();
     }
+  }
+
+  void changeEmoji(String emojiName) {
+    ///
+    for (Block block in selectedBlocks) {
+      block.emoji = emojiGenerator.getEmoji(emojiName);
+    }
+    updateCallback(selectedBlocks.first);
   }
 
   ///
@@ -403,5 +466,59 @@ class BlockSet {
 
   bool isBlockSelected(Block block) {
     return selectedBlocks.contains(block);
+  }
+
+  void linkForward() {
+    /// If 2 blocks are selected this will create a link between them
+    /// the link is one way. So the selection order is important
+    if (selectedBlocks.length < 2) {
+      return;
+    }
+
+    for (int i = 1; i < selectedBlocks.length; i++) {
+      /// Adds a link relationship between 2 selected blocks
+      linkTwoBlocks(selectedBlocks[0], selectedBlocks[i]);
+    }
+  }
+
+  void linkReverse() {
+    /// If 2 blocks are selected this will create a link between them
+    /// the link is one way. So the selection order is important
+    if (selectedBlocks.length < 2) {
+      return;
+    }
+
+    for (int i = 1; i < selectedBlocks.length; i++) {
+      /// Adds a link relationship between 2 selected blocks
+      linkTwoBlocks(selectedBlocks[i], selectedBlocks[0]);
+    }
+  }
+
+  void linkTwoBlocks(Block a, Block b) {
+    Iterable<BlockRelation> matching = relations.where((r) =>
+        r.thisBlock == a &&
+        r.type == BlockRelationType.hasReceiver &&
+        r.thatBlock == b);
+
+    if (matching.isEmpty) {
+      developer.log("linking ${a.emoji.emoji} to ${b.emoji.emoji}");
+      relations.add(BlockRelation(a, BlockRelationType.hasReceiver, b));
+    } else {
+      developer.log("unlinking ${a.emoji.emoji} to ${b.emoji.emoji}");
+      relations.removeWhere((link) => matching.contains(link));
+    }
+  }
+
+  bool blocksAreLinked({bool forward = true}) {
+    if (selectedBlocks.length < 2) {
+      developer.log("more than 2 selected!");
+      return false;
+    }
+    Block a = selectedBlocks[forward ? 0 : 1];
+    Block b = selectedBlocks[forward ? 1 : 0];
+    return relations.any((r) =>
+        r.thisBlock == a &&
+        r.type == BlockRelationType.hasReceiver &&
+        r.thatBlock == b);
   }
 }

@@ -1,5 +1,3 @@
-library block_library;
-
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -314,7 +312,10 @@ class BlockInternal extends StatelessWidget {
                   width: 3,
                   style:
                       block.isSelected() ? BorderStyle.solid : BorderStyle.none,
-                  color: const Color.fromARGB(255, 255, 107, 107)),
+                  // The first selected should be a lighter share of orange
+                  color: block.blockSet.selectedBlocks.indexOf(block) == 0
+                      ? const Color.fromARGB(255, 255, 138, 28)
+                      : const Color.fromARGB(255, 255, 107, 107)),
               borderRadius: BorderRadius.circular(5),
               boxShadow: const [
                 BoxShadow(
