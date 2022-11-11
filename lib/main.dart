@@ -1,3 +1,5 @@
+import 'package:emoji_party/widget/block_control.dart';
+import 'package:emoji_party/widget/control_icon.dart';
 import 'package:flutter/material.dart';
 import 'model/block.dart';
 import 'widget/block_widget.dart';
@@ -23,11 +25,6 @@ class _MyAppState extends State<MyApp> {
   /// and the background color.
   late BlockSet blockSet;
 
-  /// Function could be improved with a selected blocks group
-  /// List<Block> selectedBlocks = [];
-
-  static const Color iconColor = Colors.blue;
-
   /// Allows opening the drawer from other places
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   String emojiSearchString = "";
@@ -38,7 +35,7 @@ class _MyAppState extends State<MyApp> {
 
   @override
   void initState() {
-    blockSet = BlockSet(setStateCallback: applySetState);
+    blockSet = BlockSet(setUpdateCallback: applySetState);
     super.initState();
   }
 
@@ -59,18 +56,26 @@ class _MyAppState extends State<MyApp> {
 
               /// Leading instead of actions so its not covered by debug
               /// This is the button that generate the blocks
-              leading: _formattedIcon(
-                  Icons.add, blockSet.addBlock, "add a new block"),
+              leading: ControlIcon(
+                  icon: Icons.add,
+                  function: blockSet.addBlock,
+                  tooltip: "add a new block"),
 
               actions: [
-                _formattedIcon(
-                    Icons.select_all,
-                    blockSet.selectAllOrNone,
-                    blockSet.selectedBlocks.isEmpty
+                ControlIcon(
+                    icon: Icons.select_all,
+                    function: blockSet.selectAllOrNone,
+                    tooltip: blockSet.selectedBlocks.isEmpty
                         ? "select all"
                         : "select none"),
-                _formattedIcon(
-                    Icons.info, _experimental, "Show experimental data"),
+                ControlIcon(
+                    icon: Icons.info,
+                    function: () {
+                      /// Toggles experimental mode and adds extra debug data to the screens
+                      blockSet.experimental = !blockSet.experimental;
+                      setState(() {});
+                    },
+                    tooltip: "Show experimental data"),
               ],
             ),
             endDrawer: EmojiDrawer(
@@ -100,7 +105,10 @@ class _MyAppState extends State<MyApp> {
         blocks.add(RelationWidget(relation: relation));
       }
       // finally add the block
-      blocks.add(BlockWidget(block: block, key: ObjectKey(block)));
+      blocks.add(BlockControl(
+          block: block,
+          key: ObjectKey(block),
+          child: BlockWidget(block: block)));
     }
     return blocks;
   }
@@ -125,37 +133,54 @@ class _MyAppState extends State<MyApp> {
                 children: [
                   blockSet.selectedBlocks.length >= 2
                       ? blockSet.blocksAreLinked(forward: true)
-                          ? _formattedIcon(Icons.link_off, blockSet.linkForward,
-                              "Remove forward link")
-                          : _formattedIcon(Icons.link, blockSet.linkForward,
-                              "Create forward link")
+                          ? ControlIcon(
+                              icon: Icons.link_off,
+                              function: blockSet.linkForward,
+                              tooltip: "Remove forward link")
+                          : ControlIcon(
+                              icon: Icons.link,
+                              function: blockSet.linkForward,
+                              tooltip: "Create forward link")
                       : Container(),
                   blockSet.selectedBlocks.length >= 2
                       ? blockSet.blocksAreLinked(forward: false)
-                          ? _formattedIcon(Icons.link_off, blockSet.linkReverse,
-                              "Remove reverse link")
-                          : _formattedIcon(Icons.link, blockSet.linkReverse,
-                              "Create reverse link")
+                          ? ControlIcon(
+                              icon: Icons.link_off,
+                              function: blockSet.linkReverse,
+                              tooltip: "Remove reverse link")
+                          : ControlIcon(
+                              icon: Icons.link,
+                              function: blockSet.linkReverse,
+                              tooltip: "Create reverse link")
                       : Container(),
-                  _formattedIcon(Icons.arrow_upward, blockSet.toTop,
-                      "Move selected to top"),
-                  _formattedIcon(Icons.arrow_downward, blockSet.toBottom,
-                      "Move select to bottom"),
-                  _formattedIcon(Icons.delete, blockSet.deleteSelected,
-                      "Delete selected blocks"),
+                  ControlIcon(
+                      icon: Icons.arrow_upward,
+                      function: blockSet.toTop,
+                      tooltip: "Move selected to top"),
+                  ControlIcon(
+                      icon: Icons.arrow_downward,
+                      function: blockSet.toBottom,
+                      tooltip: "Move select to bottom"),
+                  ControlIcon(
+                      icon: Icons.delete,
+                      function: blockSet.deleteSelected,
+                      tooltip: "Delete selected blocks"),
                 ],
               ),
               Row(
                 children: [
-                  _formattedIcon(Icons.search, () {
-                    _scaffoldKey.currentState!.openEndDrawer();
-                  }, "Change emoji")
+                  ControlIcon(
+                      icon: Icons.search,
+                      function: _scaffoldKey.currentState!.openEndDrawer,
+                      tooltip: "Change emoji")
                 ],
               ),
               Row(
                 children: [
-                  _formattedIcon(
-                      Icons.refresh, blockSet.randomEmoji, "Random emojis"),
+                  ControlIcon(
+                      icon: Icons.refresh,
+                      function: blockSet.randomEmoji,
+                      tooltip: "Random emojis"),
                 ],
               )
             ],
@@ -163,22 +188,5 @@ class _MyAppState extends State<MyApp> {
         ),
       )
     ];
-  }
-
-  _formattedIcon(IconData icon, void Function() function, String tooltip) {
-    /// Shorthand for the onscreen icons in the app_bar
-    /// and in the select icons popups
-    return IconButton(
-        onPressed: () {
-          setState(() {
-            function();
-          });
-        },
-        icon: Tooltip(message: tooltip, child: Icon(icon, color: iconColor)));
-  }
-
-  void _experimental() {
-    /// Toggles experimental mode and adds extra debug data to the screens
-    blockSet.experimental = !blockSet.experimental;
   }
 }

@@ -121,12 +121,11 @@ class BlockSet {
 
   final EmojiGenerator emojiGenerator = EmojiGenerator();
 
-  /// [updateCallback] is currently needed for dragging a selected group
-  /// This is because setState at this level is only able to rerender the
-  /// widget being dragged.
-  Function setStateCallback;
+  /// When the block set does something that requires a widget rebuild
+  /// It calls this function.
+  Function setUpdateCallback;
 
-  BlockSet({required this.setStateCallback}) {
+  BlockSet({required this.setUpdateCallback}) {
     addBlock();
   }
 
@@ -186,7 +185,7 @@ class BlockSet {
     calculateBlockHeights();
 
     if (update) {
-      block.blockSet.updateCallback(block);
+      block.blockSet.updateCallback(block: block);
     }
   }
 
@@ -281,17 +280,18 @@ class BlockSet {
     return true;
   }
 
-  void updateCallback(Block block) {
+  void updateCallback({Block? block}) {
     /// Allows additional logic to happen before the callback executes
     /// updates to the layout
     /// [block] is the block that made this call
 
-    setStateCallback();
+    setUpdateCallback();
   }
 
   void addBlock() {
     /// Add a block to the list of blocks
     allBlocks.add(Block(emoji: emojiGenerator.randomEmoji(), blockSet: this));
+    updateCallback();
   }
 
   void deleteSelected() {
@@ -302,6 +302,7 @@ class BlockSet {
         selectedBlocks.contains(relation.thisBlock) ||
         selectedBlocks.contains(relation.thisBlock));
     selectedBlocks.clear();
+    updateCallback();
   }
 
   void selectAllOrNone() {
@@ -312,6 +313,7 @@ class BlockSet {
     } else {
       selectedBlocks.clear();
     }
+    updateCallback();
   }
 
   List<Block> selectedInOrder() {
@@ -373,6 +375,7 @@ class BlockSet {
       allBlocks.insert(allBlocks.length - 1, allBlocks.removeAt(index));
       piggyBackSort(block);
     }
+    updateCallback();
   }
 
   void toBottom({preserveOrder = true, exceptWhenOnBottom = true}) {
@@ -395,6 +398,7 @@ class BlockSet {
       allBlocks.insert(0, allBlocks.removeAt(index));
       piggyBackSort(block);
     }
+    updateCallback();
   }
 
   void randomEmoji() {
@@ -402,6 +406,7 @@ class BlockSet {
     for (Block block in selectedBlocks) {
       block.emoji = emojiGenerator.randomEmoji();
     }
+    updateCallback();
   }
 
   void changeEmoji(String emojiName) {
@@ -409,7 +414,7 @@ class BlockSet {
     for (Block block in selectedBlocks) {
       block.emoji = emojiGenerator.getEmoji(emojiName);
     }
-    updateCallback(selectedBlocks.first);
+    updateCallback();
   }
 
   ///
@@ -442,7 +447,7 @@ class BlockSet {
     } else {
       _selectBlockAndChildren(block, true);
     }
-    updateCallback(block);
+    updateCallback(block: block);
 
     return !selected; // flip selected
   }
@@ -479,6 +484,7 @@ class BlockSet {
       /// Adds a link relationship between 2 selected blocks
       linkTwoBlocks(selectedBlocks[0], selectedBlocks[i]);
     }
+    updateCallback();
   }
 
   void linkReverse() {
@@ -492,6 +498,7 @@ class BlockSet {
       /// Adds a link relationship between 2 selected blocks
       linkTwoBlocks(selectedBlocks[i], selectedBlocks[0]);
     }
+    updateCallback();
   }
 
   void linkTwoBlocks(Block a, Block b) {

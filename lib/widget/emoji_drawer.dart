@@ -32,17 +32,17 @@ class _EmojiDrawerState extends State<EmojiDrawer> {
   /// For filtering the emoji drawer
   final TextEditingController _editingController = TextEditingController();
   String searchString = "";
-  bool init = true;
+
+  @override
+  void initState() {
+    /// Setup the search string if there is one already typed in by the user
+    searchString = widget.initialSearchString;
+    _editingController.text = searchString;
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
-    ///TODO this is not the best way to achieve this
-    if (init) {
-      searchString = widget.initialSearchString;
-      _editingController.text = searchString;
-      init = false;
-    }
-
     return Drawer(
         child: Padding(
       padding: const EdgeInsets.all(8.0),
