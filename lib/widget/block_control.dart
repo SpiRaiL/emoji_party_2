@@ -10,7 +10,6 @@ class BlockControl extends StatefulWidget {
   /// on the screen.
   /// This is the Positioned and Draggable stack
   /// It allows ofr the movement of the Block.
-  /// Below is the Block internal widget.
 
   const BlockControl({required this.block, super.key, required this.child});
 

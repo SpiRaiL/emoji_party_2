@@ -121,12 +121,26 @@ class BlockSet {
 
   final EmojiGenerator emojiGenerator = EmojiGenerator();
 
-  /// When the block set does something that requires a widget rebuild
-  /// It calls this function.
-  Function setUpdateCallback;
+  /// Scaffold key is needed in the block set to allow
+  /// access to the scaffold. Specifically here for opening the emoji drawer
+  final GlobalKey<ScaffoldState> scaffoldKey = GlobalKey<ScaffoldState>();
 
-  BlockSet({required this.setUpdateCallback}) {
+  /// When the block set does something that requires a widget rebuild
+  /// It also calls this function.
+  /// This is where you would put your setState function for the widget
+  /// that houses all the blocks
+  /// see the block_area lib
+  Function? onUpdate;
+
+  BlockSet({this.onUpdate}) {
     addBlock();
+  }
+
+  void updateCallback({Block? block}) {
+    /// Allows additional logic to happen before the callback executes
+    /// updates to the layout
+    /// [block] is the block that made this call
+    onUpdate?.call();
   }
 
   bool blockIsInside(Block a, Block b) {
@@ -278,14 +292,6 @@ class BlockSet {
           name: "piggyBack");
     }
     return true;
-  }
-
-  void updateCallback({Block? block}) {
-    /// Allows additional logic to happen before the callback executes
-    /// updates to the layout
-    /// [block] is the block that made this call
-
-    setUpdateCallback();
   }
 
   void addBlock() {
