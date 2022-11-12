@@ -66,4 +66,10 @@ class EmojiGenerator {
 
     return EmojiData(color: color, emoji: emoji, emojiName: emojiName);
   }
+
+  String searchString = "";
+  Iterable<MapEntry<String, dynamic>> emojisMatchingSearchString() {
+    /// Search functionality on the emoji list
+    return emojiMap.entries.where((emoji) => emoji.key.contains(searchString));
+  }
 }

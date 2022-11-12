@@ -23,8 +23,6 @@ class _MyAppState extends State<MyApp> {
   /// and the background color.
   late BlockSet blockSet = BlockSet();
 
-  String emojiSearchString = "";
-
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -66,16 +64,11 @@ class _MyAppState extends State<MyApp> {
             ),
             endDrawer: EmojiDrawer(
                 emojiGenerator: blockSet.emojiGenerator,
-                initialSearchString: emojiSearchString,
-                callback: onDrawerSelect),
+                callback: (emojiName) {
+                  blockSet.changeEmoji(emojiName);
+                }),
 
             /// Finally all the blocks on the screen
             body: BlockArea(blockSet: blockSet)));
-  }
-
-  void onDrawerSelect(String emojiName, String searchString) {
-    /// Handles return functions from the search
-    blockSet.changeEmoji(emojiName);
-    emojiSearchString = searchString;
   }
 }

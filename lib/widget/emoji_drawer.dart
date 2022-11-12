@@ -12,17 +12,16 @@ class EmojiDrawer extends StatefulWidget {
   /// [initialSearchString] is needed if you want to start with a search
   /// this is also needed if you want to save this string in the parent for the
   /// next time.
-  const EmojiDrawer(
-      {required this.emojiGenerator,
-      required this.callback,
-      super.key,
-      this.closeDrawerOnSelect = true,
-      required this.initialSearchString});
+  const EmojiDrawer({
+    required this.emojiGenerator,
+    required this.callback,
+    super.key,
+    this.closeDrawerOnSelect = true,
+  });
 
   final EmojiGenerator emojiGenerator;
   final Function callback;
   final bool closeDrawerOnSelect;
-  final String initialSearchString;
 
   @override
   State<EmojiDrawer> createState() => _EmojiDrawerState();
@@ -31,13 +30,11 @@ class EmojiDrawer extends StatefulWidget {
 class _EmojiDrawerState extends State<EmojiDrawer> {
   /// For filtering the emoji drawer
   final TextEditingController _editingController = TextEditingController();
-  String searchString = "";
 
   @override
   void initState() {
     /// Setup the search string if there is one already typed in by the user
-    searchString = widget.initialSearchString;
-    _editingController.text = searchString;
+    _editingController.text = widget.emojiGenerator.searchString;
     super.initState();
   }
 
@@ -53,7 +50,7 @@ class _EmojiDrawerState extends State<EmojiDrawer> {
             child: TextField(
               onChanged: (value) {
                 setState(() {
-                  searchString = value;
+                  widget.emojiGenerator.searchString = value;
                 });
               },
               controller: _editingController,
@@ -69,14 +66,13 @@ class _EmojiDrawerState extends State<EmojiDrawer> {
             child: ListView(
 
                 /// for all the available emojis
-                children: widget.emojiGenerator.emojiMap.entries
-                    // Filter by the query text
-                    .where((emoji) => emoji.key.contains(searchString))
+                children: widget.emojiGenerator
+                    .emojisMatchingSearchString()
 
                     /// Make a clickable row
                     .map((emoji) => InkWell(
                           onTap: () {
-                            widget.callback(emoji.key, searchString);
+                            widget.callback(emoji.key);
 
                             // close the drawer
                             if (widget.closeDrawerOnSelect) {
