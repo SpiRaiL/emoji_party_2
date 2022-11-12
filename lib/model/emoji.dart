@@ -9,12 +9,13 @@ class EmojiData {
   Color color;
   String emoji;
   String emojiName;
+  bool animated;
 
-  EmojiData({
-    required this.color,
-    required this.emoji,
-    required this.emojiName,
-  });
+  EmojiData(
+      {required this.color,
+      required this.emoji,
+      required this.emojiName,
+      this.animated = false});
 }
 
 class EmojiGenerator {

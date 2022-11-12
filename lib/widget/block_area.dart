@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../model/block.dart';
 import 'block_control.dart';
 import 'block_widget.dart';
-import 'control_icon.dart';
+import 'control_buttons.dart';
 import 'relation_widget.dart';
 
 class BlockArea extends StatefulWidget {
@@ -78,35 +78,35 @@ class BlockAreaControlIcons extends StatelessWidget {
               children: [
                 blockSet.selectedBlocks.length >= 2
                     ? blockSet.blocksAreLinked(forward: true)
-                        ? ControlIcon(
+                        ? ControlButton(
                             icon: Icons.link_off,
                             function: blockSet.linkForward,
                             tooltip: "Remove forward link")
-                        : ControlIcon(
+                        : ControlButton(
                             icon: Icons.link,
                             function: blockSet.linkForward,
                             tooltip: "Create forward link")
                     : Container(),
                 blockSet.selectedBlocks.length >= 2
                     ? blockSet.blocksAreLinked(forward: false)
-                        ? ControlIcon(
+                        ? ControlButton(
                             icon: Icons.link_off,
                             function: blockSet.linkReverse,
                             tooltip: "Remove reverse link")
-                        : ControlIcon(
+                        : ControlButton(
                             icon: Icons.link,
                             function: blockSet.linkReverse,
                             tooltip: "Create reverse link")
                     : Container(),
-                ControlIcon(
+                ControlButton(
                     icon: Icons.arrow_upward,
                     function: blockSet.toTop,
                     tooltip: "Move selected to top"),
-                ControlIcon(
+                ControlButton(
                     icon: Icons.arrow_downward,
                     function: blockSet.toBottom,
                     tooltip: "Move select to bottom"),
-                ControlIcon(
+                ControlButton(
                     icon: Icons.delete,
                     function: blockSet.deleteSelected,
                     tooltip: "Delete selected blocks"),
@@ -114,7 +114,11 @@ class BlockAreaControlIcons extends StatelessWidget {
             ),
             Row(
               children: [
-                ControlIcon(
+                ControlButton(
+                    icon: Icons.refresh,
+                    function: blockSet.randomEmoji,
+                    tooltip: "Random emojis"),
+                ControlButton(
                     icon: Icons.search,
                     function: blockSet.scaffoldKey.currentState!.openEndDrawer,
                     tooltip: "Change emoji")
@@ -122,10 +126,10 @@ class BlockAreaControlIcons extends StatelessWidget {
             ),
             Row(
               children: [
-                ControlIcon(
-                    icon: Icons.refresh,
-                    function: blockSet.randomEmoji,
-                    tooltip: "Random emojis"),
+                ControlButton(
+                    icon: Icons.animation,
+                    function: blockSet.animateEmoji,
+                    tooltip: "Animate emojis"),
               ],
             )
           ],

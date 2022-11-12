@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
-class ControlIcon extends StatelessWidget {
+class ControlButton extends StatelessWidget {
   /// Icon's that appear in and around the main block area
-  const ControlIcon({
+  const ControlButton({
     Key? key,
     this.icon,
     this.function,

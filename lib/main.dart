@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'model/block.dart';
 import 'widget/block_area.dart';
-import 'widget/control_icon.dart';
+import 'widget/control_buttons.dart';
 import 'widget/emoji_drawer.dart';
 
 void main() {
@@ -40,19 +40,19 @@ class _MyAppState extends State<MyApp> {
 
               /// Leading instead of actions so its not covered by debug
               /// This is the button that generate the blocks
-              leading: ControlIcon(
+              leading: ControlButton(
                   icon: Icons.add,
                   function: blockSet.addBlock,
                   tooltip: "add a new block"),
 
               actions: [
-                ControlIcon(
+                ControlButton(
                     icon: Icons.select_all,
                     function: blockSet.selectAllOrNone,
                     tooltip: blockSet.selectedBlocks.isEmpty
                         ? "select all"
                         : "select none"),
-                ControlIcon(
+                ControlButton(
                     icon: Icons.info,
                     function: () {
                       /// Toggles experimental mode and adds extra debug data to the screens

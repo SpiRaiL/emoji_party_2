@@ -53,11 +53,14 @@ class BlockWidget extends StatelessWidget {
               height: 200,
               child: FittedBox(
                 fit: BoxFit.contain,
-                child: Tooltip(
-                    message: block.emoji.emojiName,
-                    child: Text(
-                      block.emoji.emoji,
-                    )),
+                child: RotatedBox(
+                  quarterTurns: block.emoji.animated ? 1 : 0,
+                  child: Tooltip(
+                      message: block.emoji.emojiName,
+                      child: Text(
+                        block.emoji.emoji,
+                      )),
+                ),
               ),
             ))));
   }

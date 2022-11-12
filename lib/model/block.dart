@@ -416,9 +416,20 @@ class BlockSet {
   }
 
   void changeEmoji(String emojiName) {
-    ///
+    /// Sets the emoji to the one matching the name
     for (Block block in selectedBlocks) {
       block.emoji = emojiGenerator.getEmoji(emojiName);
+    }
+    updateCallback();
+  }
+
+  void animateEmoji() {
+    /// Get the animation state of the first emoji
+    bool isAnimated = selectedBlocks.first.emoji.animated;
+
+    for (Block block in selectedBlocks) {
+      /// apply the opposite of that state to all selected.
+      block.emoji.animated = !isAnimated;
     }
     updateCallback();
   }
