@@ -49,12 +49,12 @@ class BlockWidget extends StatelessWidget {
             padding: const EdgeInsets.all(5),
             child: Center(
                 child: SizedBox(
-              width: 200,
-              height: 200,
+              width: 80,
+              height: 80,
               child: FittedBox(
                 fit: BoxFit.contain,
-                child: RotatedBox(
-                  quarterTurns: block.emoji.animated ? 1 : 0,
+                child: Transform.rotate(
+                  angle: block.emoji.animated ? 45 : 0,
                   child: Tooltip(
                       message: block.emoji.emojiName,
                       child: Text(
