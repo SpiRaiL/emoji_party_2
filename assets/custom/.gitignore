@@ -1,0 +1,4 @@
+# This folder contains images that the developer adds to also appear in the list
+# All files are ignored due to licensing and to keep the repo size down.
+*
+!.gitignore
