@@ -36,7 +36,8 @@ class _BlockWidgetState extends State<BlockWidget>
       vsync: this,
     )..repeat();
 
-    setRotation(45);
+    animation =
+        Tween<double>(begin: 0, end: (45 * pi / 180)).animate(_controller);
 
     super.initState();
   }
@@ -45,12 +46,6 @@ class _BlockWidgetState extends State<BlockWidget>
   void dispose() {
     _controller.dispose();
     super.dispose();
-  }
-
-  void setRotation(int degrees) {
-    final angle = degrees * pi / 180;
-
-    animation = Tween<double>(begin: 0, end: angle).animate(_controller);
   }
 
   @override
