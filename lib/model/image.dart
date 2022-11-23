@@ -34,11 +34,7 @@ class ImageGenerator {
   void getImageList() async {
     /// get all the images from the assets folder
 
-    imageList = [
-      "assets/custom/images/bubble.png",
-      "assets/custom/images/doughnut.png",
-      "assets/custom/images/swirl.png",
-    ];
+    imageList = ["bubble", "doughnut", "swirl"];
   }
 
   ImageData getImage(String imageName) {
@@ -58,8 +54,6 @@ class ImageGenerator {
 
   String searchString = "";
   List<String> imagesMatchingSearchString() {
-    print(searchString);
-
     /// Search functionality on the image list
     return imageList.where((image) => image.contains(searchString)).toList();
   }

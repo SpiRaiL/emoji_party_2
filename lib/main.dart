@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import 'model/block.dart';
 import 'widget/block_area.dart';
 import 'widget/control_buttons.dart';
@@ -64,6 +65,7 @@ class _MyAppState extends State<MyApp> {
             ),
             endDrawer: EmojiDrawer(
                 emojiGenerator: blockSet.emojiGenerator,
+                imageGenerator: blockSet.imageGenerator,
                 callback: (emojiName) {
                   blockSet.changeEmoji(emojiName);
                 }),
