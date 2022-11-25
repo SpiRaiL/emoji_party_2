@@ -1,10 +1,11 @@
 // A specific model class for just block data.
 // No widget building data
 
+import 'dart:developer' as developer;
 import 'dart:math';
 
+import 'package:emoji_party/model/image.dart';
 import 'package:flutter/material.dart';
-import 'dart:developer' as developer;
 
 import 'emoji.dart';
 
@@ -16,6 +17,8 @@ class Block {
   /// You can set a color and a name (some text to appear on the page)
   /// or you can generate some random data to play with
   EmojiData emoji;
+
+  ImageData image;
 
   /// Offset is the position of the block.
   /// It needs to be store in the data as it needs to be accessible
@@ -34,7 +37,7 @@ class Block {
   /// for example blocks in a selected group
   final BlockSet blockSet;
 
-  Block({required this.emoji, required this.blockSet});
+  Block({required this.emoji, required this.blockSet, required this.image});
 
   bool isSelected() {
     return blockSet.isBlockSelected(this);
@@ -120,6 +123,8 @@ class BlockSet {
   bool experimental = false;
 
   final EmojiGenerator emojiGenerator = EmojiGenerator();
+
+  final ImageGenerator imageGenerator = ImageGenerator();
 
   /// Scaffold key is needed in the block set to allow
   /// access to the scaffold. Specifically here for opening the emoji drawer
@@ -296,7 +301,10 @@ class BlockSet {
 
   void addBlock() {
     /// Add a block to the list of blocks
-    allBlocks.add(Block(emoji: emojiGenerator.randomEmoji(), blockSet: this));
+    allBlocks.add(Block(
+        emoji: emojiGenerator.randomEmoji(),
+        blockSet: this,
+        image: ImageData(imageName: '', animated: false, imageType: '')));
     updateCallback();
   }
 
