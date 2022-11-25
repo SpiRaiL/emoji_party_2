@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../model/block.dart';
 import 'block_control.dart';
 import 'block_widget.dart';
@@ -116,7 +117,9 @@ class BlockAreaControlIcons extends StatelessWidget {
               children: [
                 ControlButton(
                     icon: Icons.refresh,
-                    function: blockSet.randomEmoji,
+                    function: () {
+                      blockSet.randomMedia(true);
+                    },
                     tooltip: "Random emojis"),
                 ControlButton(
                     icon: Icons.search,
@@ -128,7 +131,7 @@ class BlockAreaControlIcons extends StatelessWidget {
               children: [
                 ControlButton(
                     icon: Icons.animation,
-                    function: blockSet.animateEmoji,
+                    function: blockSet.animateMedia,
                     tooltip: "Animate emojis"),
               ],
             )

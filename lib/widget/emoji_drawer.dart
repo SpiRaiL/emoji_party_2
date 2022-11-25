@@ -1,7 +1,5 @@
-import 'package:emoji_party/model/image.dart';
+import 'package:emoji_party/model/media.dart';
 import 'package:flutter/material.dart';
-
-import '../model/emoji.dart';
 
 class EmojiDrawer extends StatefulWidget {
   /// A pop-up draw that lists all the emojis
@@ -14,15 +12,13 @@ class EmojiDrawer extends StatefulWidget {
   /// this is also needed if you want to save this string in the parent for the
   /// next time.
   const EmojiDrawer({
-    required this.emojiGenerator,
-    required this.imageGenerator,
+    required this.mediaGenerator,
     required this.callback,
     super.key,
     this.closeDrawerOnSelect = true,
   });
 
-  final EmojiGenerator emojiGenerator;
-  final ImageGenerator imageGenerator;
+  final MediaGenerator mediaGenerator;
   final Function callback;
   final bool closeDrawerOnSelect;
 
@@ -41,7 +37,7 @@ class _EmojiDrawerState extends State<EmojiDrawer> {
   @override
   void initState() {
     /// Setup the search string if there is one already typed in by the user
-    _editingController.text = widget.emojiGenerator.searchString;
+    _editingController.text = widget.mediaGenerator.searchString;
     super.initState();
   }
 
@@ -58,11 +54,10 @@ class _EmojiDrawerState extends State<EmojiDrawer> {
                 child: TextField(
                   onChanged: (value) {
                     setState(() {
-                      widget.imageGenerator.searchString = value;
-                      widget.emojiGenerator.searchString = value;
+                      widget.mediaGenerator.searchString = value;
 
                       /// Checking if image exists for searched string
-                      if (widget.imageGenerator
+                      if (widget.mediaGenerator
                           .imagesMatchingSearchString()
                           .isEmpty) {
                         imageExist = false;
@@ -71,7 +66,7 @@ class _EmojiDrawerState extends State<EmojiDrawer> {
                       }
 
                       /// Check if emoji exists for searched string
-                      if (widget.emojiGenerator
+                      if (widget.mediaGenerator
                           .emojisMatchingSearchString()
                           .isEmpty) {
                         emojiExist = false;
@@ -108,7 +103,7 @@ class _EmojiDrawerState extends State<EmojiDrawer> {
                       : const SizedBox(),
                   Column(
                     /// for all the available emojis
-                    children: widget.imageGenerator.imagesMatchingSearchString()
+                    children: widget.mediaGenerator.imagesMatchingSearchString()
 
                         /// Make a clickable row
                         .map(
@@ -125,7 +120,7 @@ class _EmojiDrawerState extends State<EmojiDrawer> {
                             }
                           },
                           onTap: () {
-                            widget.callback(image);
+                            widget.callback("", image);
 
                             // close the drawer
                             if (widget.closeDrawerOnSelect) {
@@ -172,14 +167,14 @@ class _EmojiDrawerState extends State<EmojiDrawer> {
                       : const SizedBox(),
                   Column(
                     /// for all the available emojis
-                    children: widget.emojiGenerator
+                    children: widget.mediaGenerator
                         .emojisMatchingSearchString()
 
                         /// Make a clickable row
                         .map(
                           (emoji) => InkWell(
                             onTap: () {
-                              widget.callback(emoji.key);
+                              widget.callback(emoji.key, "");
 
                               // close the drawer
                               if (widget.closeDrawerOnSelect) {

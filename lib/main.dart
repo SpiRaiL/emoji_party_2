@@ -1,9 +1,9 @@
+import 'package:emoji_party/widget/emoji_drawer.dart';
 import 'package:flutter/material.dart';
 
 import 'model/block.dart';
 import 'widget/block_area.dart';
 import 'widget/control_buttons.dart';
-import 'widget/emoji_drawer.dart';
 
 void main() {
   runApp(const MyApp());
@@ -43,7 +43,11 @@ class _MyAppState extends State<MyApp> {
               /// This is the button that generate the blocks
               leading: ControlButton(
                   icon: Icons.add,
-                  function: blockSet.addBlock,
+                  function: () {
+                    setState(() {});
+
+                    blockSet.addBlock(true);
+                  },
                   tooltip: "add a new block"),
 
               actions: [
@@ -64,10 +68,17 @@ class _MyAppState extends State<MyApp> {
               ],
             ),
             endDrawer: EmojiDrawer(
-                emojiGenerator: blockSet.emojiGenerator,
-                imageGenerator: blockSet.imageGenerator,
-                callback: (emojiName) {
-                  blockSet.changeEmoji(emojiName);
+                mediaGenerator: blockSet.mediaGenerator,
+                callback: (emojiName, imageName) {
+                  print(emojiName);
+                  print(imageName);
+                  if (emojiName.length > 0) {
+                    blockSet.changeMedia(emojiName, false);
+                  } else if (imageName.length > 0) {
+                    blockSet.changeMedia(imageName, true);
+                  } else {
+                    print("-- NO data");
+                  }
                 }),
 
             /// Finally all the blocks on the screen

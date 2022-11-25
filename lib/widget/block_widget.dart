@@ -20,12 +20,12 @@ class _BlockWidgetState extends State<BlockWidget>
 
   late final Block block;
 
-  static const double resizeBorderWidth = 20;
-
   /// [AnimationController] for animation functionality
   late AnimationController _controller;
 
   late Animation<double> animation;
+
+  final BlockSet blockSet = BlockSet();
 
   @override
   void initState() {
@@ -55,7 +55,7 @@ class _BlockWidgetState extends State<BlockWidget>
       child: Container(
         /// Allows box decoration and padding
         decoration: BoxDecoration(
-          color: block.emoji.color,
+          color: block.media.color,
 
           /// The block boarder is only highlighted if the block is selected
           border: Border.all(
@@ -79,20 +79,20 @@ class _BlockWidgetState extends State<BlockWidget>
         padding: const EdgeInsets.all(5),
         child: Center(
           child: SizedBox(
-            width: 50,
-            height: 50,
+            width: block.media.mediaType == "image" ? 80 : 50,
+            height: block.media.mediaType == "image" ? 80 : 50,
             child: FittedBox(
               fit: BoxFit.contain,
               child: AnimatedBuilder(
                 animation: animation,
                 builder: (BuildContext context, Widget? child) =>
                     Transform.rotate(
-                  angle: block.emoji.animated ? animation.value : 0,
+                  angle: block.media.animated! ? animation.value : 0,
                   child: Tooltip(
-                    message: block.emoji.emojiName,
-                    child: Text(
-                      block.emoji.emoji,
-                    ),
+                    message: block.media.name,
+                    child: block.media.mediaType == "image"
+                        ? Image.asset(block.media.media!)
+                        : Text(block.media.media!),
                   ),
                 ),
               ),
