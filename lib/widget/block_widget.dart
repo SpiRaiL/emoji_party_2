@@ -1,6 +1,8 @@
 import 'dart:math';
 
+import 'package:emoji_party/controller/home_controller.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
 import '../model/block.dart';
 
@@ -25,11 +27,12 @@ class _BlockWidgetState extends State<BlockWidget>
 
   late Animation<double> animation;
 
-  final BlockSet blockSet = BlockSet();
+  late HomeController controller;
 
   @override
   void initState() {
     block = widget.block;
+    controller = Get.find();
 
     _controller = AnimationController(
       duration: const Duration(seconds: 5),
@@ -50,6 +53,7 @@ class _BlockWidgetState extends State<BlockWidget>
 
   @override
   Widget build(BuildContext context) {
+    print(block.media.mediaType);
     return Material(
       /// Stops any text being red. Needs to be after opacity.
       child: Container(
@@ -79,8 +83,8 @@ class _BlockWidgetState extends State<BlockWidget>
         padding: const EdgeInsets.all(5),
         child: Center(
           child: SizedBox(
-            width: block.media.mediaType == "image" ? 80 : 50,
-            height: block.media.mediaType == "image" ? 80 : 50,
+            width: controller.imagesList.isEmpty ? 50 : 80,
+            height: controller.imagesList.isEmpty ? 50 : 80,
             child: FittedBox(
               fit: BoxFit.contain,
               child: AnimatedBuilder(
@@ -90,9 +94,11 @@ class _BlockWidgetState extends State<BlockWidget>
                   angle: block.media.animated! ? animation.value : 0,
                   child: Tooltip(
                     message: block.media.name,
-                    child: block.media.mediaType == "image"
-                        ? Image.asset(block.media.media!)
-                        : Text(block.media.media!),
+                    child: controller.imagesList.isEmpty
+                        ? Text(block.media.media!)
+                        : block.media.mediaType == "image"
+                            ? Image.asset(block.media.media!)
+                            : Text(block.media.media!),
                   ),
                 ),
               ),

@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:developer' as developer;
 import 'dart:math';
 
+import 'package:emoji_party/model/block.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_emoji/flutter_emoji.dart';
@@ -75,19 +76,16 @@ class MediaGenerator {
   }
 
   Media getMedia(String name, bool mediaType) {
-    print("---------------");
-    print(name);
-    print("---------------");
     final double hue = Random().nextDouble() * 360;
     Color color = HSLColor.fromAHSL(1, hue, 1, 0.85).toColor();
 
-    if (mediaType) {
+    if (mediaType && BlockSet().media.mediaType == "image") {
       return Media(
           color: color,
           media: "assets/custom/images/$name.png",
           name: name,
           mediaType: "image");
-    } else if (!mediaType) {
+    } else if (!mediaType && BlockSet().media.mediaType == "image") {
       return Media(
         color: color,
         media: emojiMap[name],
@@ -122,7 +120,7 @@ class MediaGenerator {
       // developer.log("Generated: $emojiName - $emoji", name: "emoji");
 
       return Media(
-          color: color, media: emoji, name: emojiName, mediaType: 'amoji');
+          color: color, media: emoji, name: emojiName, mediaType: 'emoji');
     } else {
       /// Get a random index from the list.
       int index = Random().nextInt(imageList.length);

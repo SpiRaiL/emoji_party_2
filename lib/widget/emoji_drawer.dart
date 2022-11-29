@@ -1,5 +1,7 @@
+import 'package:emoji_party/controller/home_controller.dart';
 import 'package:emoji_party/model/media.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
 class EmojiDrawer extends StatefulWidget {
   /// A pop-up draw that lists all the emojis
@@ -29,6 +31,8 @@ class EmojiDrawer extends StatefulWidget {
 class _EmojiDrawerState extends State<EmojiDrawer> {
   /// For filtering the emoji drawer
   final TextEditingController _editingController = TextEditingController();
+
+  final HomeController controller = Get.find();
 
   /// Boolean value to check if search string exist
   bool imageExist = true;
@@ -85,69 +89,74 @@ class _EmojiDrawerState extends State<EmojiDrawer> {
                               BorderRadius.all(Radius.circular(25.0)))),
                 ),
               ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  imageExist
-                      ? const Padding(
-                          padding: EdgeInsets.only(left: 25.0),
-                          child: Text(
-                            'Custom',
-                            style: TextStyle(
-                              color: Colors.grey,
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        )
-                      : const SizedBox(),
-                  Column(
-                    /// for all the available emojis
-                    children: widget.mediaGenerator.imagesMatchingSearchString()
-
-                        /// Make a clickable row
-                        .map(
-                      (image) {
-                        /// Images name with path details
-                        String imageString = "assets/custom/images/$image.png";
-
-                        return InkWell(
-                          onHover: (bool value) {
-                            if (value) {
-                              setState(() {
-                                imageString = "assets/custom/images/$image.gif";
-                              });
-                            }
-                          },
-                          onTap: () {
-                            widget.callback("", image);
-
-                            // close the drawer
-                            if (widget.closeDrawerOnSelect) {
-                              Navigator.pop(context);
-                            }
-                          },
-                          child: Row(
-                            children: [
-                              SizedBox(
-                                width: 100,
-                                height: 60,
-                                child: FittedBox(
-                                  fit: BoxFit.contain,
-                                  child: Image.asset(imageString),
+              controller.imagesList.isNotEmpty
+                  ? Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        imageExist
+                            ? const Padding(
+                                padding: EdgeInsets.only(left: 25.0),
+                                child: Text(
+                                  'Custom',
+                                  style: TextStyle(
+                                    color: Colors.grey,
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
-                              ),
-                              Expanded(
-                                child: Text(image),
                               )
-                            ],
-                          ),
-                        );
-                      },
-                    ).toList(),
-                  ),
-                ],
-              ),
+                            : const SizedBox(),
+                        Column(
+                          /// for all the available emojis
+                          children:
+                              widget.mediaGenerator.imagesMatchingSearchString()
+
+                                  /// Make a clickable row
+                                  .map(
+                            (image) {
+                              /// Images name with path details
+                              String imageString =
+                                  "assets/custom/images/$image.png";
+
+                              return InkWell(
+                                onHover: (bool value) {
+                                  if (value) {
+                                    setState(() {
+                                      imageString =
+                                          "assets/custom/images/$image.gif";
+                                    });
+                                  }
+                                },
+                                onTap: () {
+                                  widget.callback("", image);
+
+                                  // close the drawer
+                                  if (widget.closeDrawerOnSelect) {
+                                    Navigator.pop(context);
+                                  }
+                                },
+                                child: Row(
+                                  children: [
+                                    SizedBox(
+                                      width: 100,
+                                      height: 60,
+                                      child: FittedBox(
+                                        fit: BoxFit.contain,
+                                        child: Image.asset(imageString),
+                                      ),
+                                    ),
+                                    Expanded(
+                                      child: Text(image),
+                                    )
+                                  ],
+                                ),
+                              );
+                            },
+                          ).toList(),
+                        ),
+                      ],
+                    )
+                  : Container(),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [

@@ -1,5 +1,7 @@
+import 'package:emoji_party/controller/home_controller.dart';
 import 'package:emoji_party/widget/emoji_drawer.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
 import 'model/block.dart';
 import 'widget/block_area.dart';
@@ -24,64 +26,79 @@ class _MyAppState extends State<MyApp> {
   /// and the background color.
   late BlockSet blockSet = BlockSet();
 
+  final controller = Get.put(HomeController());
+
+  @override
+  void initState() {
+    controller.loadImagesFromAssets(context);
+    super.initState();
+  }
+
   @override
   Widget build(BuildContext context) {
+    print(controller.imagesList);
     return MaterialApp(
-        title: 'Emoji party',
-        theme: ThemeData(
-          appBarTheme: const AppBarTheme(
-            backgroundColor: Colors.white,
-            foregroundColor: Colors.black,
-          ),
+      title: 'Emoji party',
+      theme: ThemeData(
+        appBarTheme: const AppBarTheme(
+          backgroundColor: Colors.white,
+          foregroundColor: Colors.black,
         ),
-        home: Scaffold(
-            key: blockSet.scaffoldKey,
-            appBar: AppBar(
-              title: const Text("Add emoji to the party"),
+      ),
+      home: Scaffold(
+        key: blockSet.scaffoldKey,
+        appBar: AppBar(
+          title: const Text("Add emoji to the party"),
 
-              /// Leading instead of actions so its not covered by debug
-              /// This is the button that generate the blocks
-              leading: ControlButton(
-                  icon: Icons.add,
-                  function: () {
-                    setState(() {});
+          /// Leading instead of actions so its not covered by debug
+          /// This is the button that generate the blocks
+          leading: ControlButton(
+              icon: Icons.add,
+              function: () async {
+                setState(() {});
 
-                    blockSet.addBlock(true);
-                  },
-                  tooltip: "add a new block"),
+                if (controller.imagesList.isEmpty) {
+                  blockSet.addBlock(false);
+                } else {
+                  blockSet.addBlock(true);
+                }
+              },
+              tooltip: "add a new block"),
 
-              actions: [
-                ControlButton(
-                    icon: Icons.select_all,
-                    function: blockSet.selectAllOrNone,
-                    tooltip: blockSet.selectedBlocks.isEmpty
-                        ? "select all"
-                        : "select none"),
-                ControlButton(
-                    icon: Icons.info,
-                    function: () {
-                      /// Toggles experimental mode and adds extra debug data to the screens
-                      blockSet.experimental = !blockSet.experimental;
-                      setState(() {});
-                    },
-                    tooltip: "Show experimental data"),
-              ],
-            ),
-            endDrawer: EmojiDrawer(
-                mediaGenerator: blockSet.mediaGenerator,
-                callback: (emojiName, imageName) {
-                  print(emojiName);
-                  print(imageName);
-                  if (emojiName.length > 0) {
-                    blockSet.changeMedia(emojiName, false);
-                  } else if (imageName.length > 0) {
-                    blockSet.changeMedia(imageName, true);
-                  } else {
-                    print("-- NO data");
-                  }
-                }),
+          actions: [
+            ControlButton(
+                icon: Icons.select_all,
+                function: blockSet.selectAllOrNone,
+                tooltip: blockSet.selectedBlocks.isEmpty
+                    ? "select all"
+                    : "select none"),
+            ControlButton(
+                icon: Icons.info,
+                function: () {
+                  /// Toggles experimental mode and adds extra debug data to the screens
+                  blockSet.experimental = !blockSet.experimental;
+                  setState(() {});
+                },
+                tooltip: "Show experimental data"),
+          ],
+        ),
+        endDrawer: EmojiDrawer(
+            mediaGenerator: blockSet.mediaGenerator,
+            callback: (emojiName, imageName) {
+              if (emojiName.length > 0) {
+                blockSet.changeMedia(emojiName, false);
+              } else if (imageName.length > 0) {
+                blockSet.changeMedia(imageName, true);
+              } else {
+                print("-- NO data");
+              }
+            }),
 
-            /// Finally all the blocks on the screen
-            body: BlockArea(blockSet: blockSet)));
+        /// Finally all the blocks on the screen
+        body: Obx(() => controller.isLoading.value
+            ? const CircularProgressIndicator()
+            : BlockArea(blockSet: blockSet)),
+      ),
+    );
   }
 }

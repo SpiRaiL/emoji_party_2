@@ -4,8 +4,10 @@
 import 'dart:developer' as developer;
 import 'dart:math';
 
+import 'package:emoji_party/controller/home_controller.dart';
 import 'package:emoji_party/model/media.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
 class Block {
   /// Block class
@@ -125,6 +127,8 @@ class BlockSet {
   /// Scaffold key is needed in the block set to allow
   /// access to the scaffold. Specifically here for opening the emoji drawer
   final GlobalKey<ScaffoldState> scaffoldKey = GlobalKey<ScaffoldState>();
+
+  final HomeController controller = Get.find();
 
   /// When the block set does something that requires a widget rebuild
   /// It also calls this function.
@@ -298,6 +302,14 @@ class BlockSet {
   /// [mediaType] will specify which type of media is being rendered
   /// 0 -> Emoji , 1 -> Image
   void addBlock(bool mediaType) {
+    print("-------------------");
+    print(controller.imagesList);
+    if (controller.imagesList.isEmpty) {
+      mediaType = false;
+    } else {
+      mediaType = true;
+    }
+
     /// Add a block to the list of blocks
     allBlocks.add(Block(
       media: mediaGenerator.randomMedia(mediaType),
@@ -434,9 +446,14 @@ class BlockSet {
     /// Get the animation state of the first emoji
     bool isAnimated = selectedBlocks.first.media.animated!;
 
-    for (Block block in selectedBlocks) {
-      /// apply the opposite of that state to all selected.
-      block.media.animated = !isAnimated;
+    if (selectedBlocks.first.media.mediaType == "image") {
+      selectedBlocks.first.media.media =
+          "assets/custom/images/${selectedBlocks.first.media.name}.giff";
+    } else {
+      for (Block block in selectedBlocks) {
+        /// apply the opposite of that state to all selected.
+        block.media.animated = !isAnimated;
+      }
     }
     updateCallback();
   }
