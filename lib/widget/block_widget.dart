@@ -45,6 +45,16 @@ class _BlockWidgetState extends State<BlockWidget>
     super.initState();
   }
 
+  bool getAnimatedImage() {
+    if (controller.imagesList
+        .contains(block.media.media!.replaceAll("png", "gif"))) {
+      return true;
+    } else {
+      return false;
+    }
+    // block.media.media!.replaceAll("png", "gif");
+  }
+
   @override
   void dispose() {
     _controller.dispose();
@@ -53,7 +63,6 @@ class _BlockWidgetState extends State<BlockWidget>
 
   @override
   Widget build(BuildContext context) {
-    print(block.media.mediaType);
     return Material(
       /// Stops any text being red. Needs to be after opacity.
       child: Container(
@@ -83,25 +92,53 @@ class _BlockWidgetState extends State<BlockWidget>
         padding: const EdgeInsets.all(5),
         child: Center(
           child: SizedBox(
-            width: controller.imagesList.isEmpty ? 50 : 80,
-            height: controller.imagesList.isEmpty ? 50 : 80,
+            width: 70,
+            height: 70,
             child: FittedBox(
               fit: BoxFit.contain,
-              child: AnimatedBuilder(
-                animation: animation,
-                builder: (BuildContext context, Widget? child) =>
-                    Transform.rotate(
-                  angle: block.media.animated! ? animation.value : 0,
-                  child: Tooltip(
-                    message: block.media.name,
-                    child: controller.imagesList.isEmpty
-                        ? Text(block.media.media!)
-                        : block.media.mediaType == "image"
-                            ? Image.asset(block.media.media!)
-                            : Text(block.media.media!),
-                  ),
-                ),
-              ),
+              child: controller.imagesList.isEmpty
+                  ? AnimatedBuilder(
+                      animation: animation,
+                      builder: (BuildContext context, Widget? child) =>
+                          Transform.rotate(
+                        angle: block.media.animated! ? animation.value : 0,
+                        child: Tooltip(
+                          message: block.media.name,
+                          child: Text(block.media.media!),
+                        ),
+                      ),
+                    )
+                  : block.media.mediaType == "image"
+                      ? block.media.animated! && getAnimatedImage()
+                          ? Tooltip(
+                              message: block.media.name,
+                              child: Image.asset(block.media.animated!
+                                  ? block.media.media!.replaceAll("png", "gif")
+                                  : block.media.media!),
+                            )
+                          : AnimatedBuilder(
+                              animation: animation,
+                              builder: (BuildContext context, Widget? child) =>
+                                  Transform.rotate(
+                                angle:
+                                    block.media.animated! ? animation.value : 0,
+                                child: Tooltip(
+                                  message: block.media.name,
+                                  child: Image.asset(block.media.media!),
+                                ),
+                              ),
+                            )
+                      : AnimatedBuilder(
+                          animation: animation,
+                          builder: (BuildContext context, Widget? child) =>
+                              Transform.rotate(
+                            angle: block.media.animated! ? animation.value : 0,
+                            child: Tooltip(
+                              message: block.media.name,
+                              child: Text(block.media.media!),
+                            ),
+                          ),
+                        ),
             ),
           ),
         ),
