@@ -1,10 +1,13 @@
 import 'dart:convert';
 
+import 'package:emoji_party/model/media.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:get/get.dart';
 
 class HomeController extends GetxController {
+  /// List of images from assets
   List<String> imagesList = <String>[].obs;
+  List<String> imageName = <String>[].obs;
   var isLoading = false.obs;
 
   @override
@@ -33,6 +36,14 @@ class HomeController extends GetxController {
           .toList();
 
       imagesList = imageList;
+
+      for (String text in imageList) {
+        imageName.add(text.split("/")[3].split(".")[0]);
+      }
+
+      imageName.toSet();
+
+      MediaGenerator().imageList = imageList;
 
       return imageList;
     } finally {

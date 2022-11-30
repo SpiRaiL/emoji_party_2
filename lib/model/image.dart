@@ -27,7 +27,6 @@ class ImageData {
 }
 
 class ImageGenerator {
-  /// List of images from assets
   List<String> imageList = [];
 
   ImageGenerator() {

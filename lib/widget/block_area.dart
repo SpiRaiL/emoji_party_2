@@ -24,10 +24,15 @@ class BlockArea extends StatefulWidget {
 }
 
 class _BlockAreaState extends State<BlockArea> {
+  late HomeController controller;
+
   @override
   void initState() {
+    controller = Get.find();
     widget.blockSet.onUpdate = () {
-      setState(() {});
+      setState(() {
+        widget.blockSet.mediaGenerator.imageList = controller.imagesList;
+      });
     };
     super.initState();
   }

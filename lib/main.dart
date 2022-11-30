@@ -24,9 +24,9 @@ class _MyAppState extends State<MyApp> {
   /// but only the data
   /// the the "name" which can be just an emoji
   /// and the background color.
-  late BlockSet blockSet = BlockSet();
 
   final controller = Get.put(HomeController());
+  late BlockSet blockSet = BlockSet();
 
   @override
   void initState() {
@@ -36,7 +36,6 @@ class _MyAppState extends State<MyApp> {
 
   @override
   Widget build(BuildContext context) {
-    print(controller.imagesList);
     return MaterialApp(
       title: 'Emoji party',
       theme: ThemeData(
@@ -57,11 +56,7 @@ class _MyAppState extends State<MyApp> {
               function: () async {
                 setState(() {});
 
-                if (controller.imagesList.isEmpty) {
-                  blockSet.addBlock(false);
-                } else {
-                  blockSet.addBlock(true);
-                }
+                blockSet.addBlock();
               },
               tooltip: "add a new block"),
 

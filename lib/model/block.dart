@@ -138,7 +138,7 @@ class BlockSet {
   Function? onUpdate;
 
   BlockSet({this.onUpdate}) {
-    addBlock(true);
+    addBlock();
   }
 
   void updateCallback({Block? block}) {
@@ -301,9 +301,8 @@ class BlockSet {
 
   /// [mediaType] will specify which type of media is being rendered
   /// 0 -> Emoji , 1 -> Image
-  void addBlock(bool mediaType) {
-    print("-------------------");
-    print(controller.imagesList);
+  void addBlock() {
+    bool mediaType;
     if (controller.imagesList.isEmpty) {
       mediaType = false;
     } else {
@@ -427,6 +426,8 @@ class BlockSet {
   }
 
   void randomMedia(bool mediaType) {
+    controller.imagesList.isNotEmpty ? true : false;
+
     /// Re-roll the emoji, in the same place in the stack
     for (Block block in selectedBlocks) {
       block.media = mediaGenerator.randomMedia(mediaType);
@@ -437,7 +438,7 @@ class BlockSet {
   void changeMedia(String name, bool mediaType) {
     /// Sets the emoji to the one matching the name
     for (Block block in selectedBlocks) {
-      block.media = mediaGenerator.getMedia(name, mediaType);
+      block.media = mediaGenerator.changeMedia(name, mediaType);
     }
     updateCallback();
   }
@@ -446,25 +447,9 @@ class BlockSet {
     /// Get the animation state of the first emoji
     bool isAnimated = selectedBlocks.first.media.animated!;
 
-    if (selectedBlocks.first.media.mediaType == "image") {
-      selectedBlocks.first.media.media =
-          "assets/custom/images/${selectedBlocks.first.media.name}.giff";
-    } else {
-      for (Block block in selectedBlocks) {
-        /// apply the opposite of that state to all selected.
-        block.media.animated = !isAnimated;
-      }
-    }
-    updateCallback();
-  }
-
-  void selectMediaType() {
-    /// Get the animation state of the first emoji
-    bool isSelected = media.mediaType! == "image" ? true : false;
-
-    if (isSelected) {
+    for (Block block in selectedBlocks) {
       /// apply the opposite of that state to all selected.
-      media.animated = !isSelected;
+      block.media.animated = !isAnimated;
     }
     updateCallback();
   }

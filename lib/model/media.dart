@@ -2,10 +2,11 @@ import 'dart:convert';
 import 'dart:developer' as developer;
 import 'dart:math';
 
-import 'package:emoji_party/model/block.dart';
+import 'package:emoji_party/controller/home_controller.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_emoji/flutter_emoji.dart';
+import 'package:get/get.dart';
 
 class Media {
   Color? color;
@@ -49,15 +50,11 @@ class MediaGenerator {
   /// A big list of emojis
   Map<String, dynamic> emojiMap = {};
 
+  /// GetX controller
+  HomeController controller = Get.find();
+
   MediaGenerator() {
-    getImageList();
     buildEmojiMap();
-  }
-
-  void getImageList() async {
-    /// get all the images from the assets folder
-
-    imageList = ["bubble", "doughnut", "swirl"];
   }
 
   void buildEmojiMap() {
@@ -75,17 +72,17 @@ class MediaGenerator {
     developer.log("${emojiMap.length} emojis found", name: "emoji");
   }
 
-  Media getMedia(String name, bool mediaType) {
+  Media changeMedia(String name, bool mediaType) {
     final double hue = Random().nextDouble() * 360;
     Color color = HSLColor.fromAHSL(1, hue, 1, 0.85).toColor();
 
-    if (mediaType && BlockSet().media.mediaType == "image") {
+    if (mediaType) {
       return Media(
           color: color,
           media: "assets/custom/images/$name.png",
           name: name,
           mediaType: "image");
-    } else if (!mediaType && BlockSet().media.mediaType == "image") {
+    } else if (!mediaType) {
       return Media(
         color: color,
         media: emojiMap[name],
@@ -123,9 +120,9 @@ class MediaGenerator {
           color: color, media: emoji, name: emojiName, mediaType: 'emoji');
     } else {
       /// Get a random index from the list.
-      int index = Random().nextInt(imageList.length);
+      int index = Random().nextInt(controller.imagesList.length);
 
-      String name = imageList[index];
+      String name = controller.imageName[index];
 
       developer.log("Generated: $name - assets/custom/images/$name.png",
           name: "image");
@@ -141,7 +138,10 @@ class MediaGenerator {
   String searchString = "";
   List<String> imagesMatchingSearchString() {
     /// Search functionality on the image list
-    return imageList.where((image) => image.contains(searchString)).toList();
+    return controller.imageName
+        .toSet()
+        .where((image) => image.contains(searchString))
+        .toList();
   }
 
   Iterable<MapEntry<String, dynamic>> emojisMatchingSearchString() {
