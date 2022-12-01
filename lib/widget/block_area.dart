@@ -1,4 +1,9 @@
+import 'dart:math';
+
+import 'package:emoji_party/controller/home_controller.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+
 import '../model/block.dart';
 import 'block_control.dart';
 import 'block_widget.dart';
@@ -19,10 +24,15 @@ class BlockArea extends StatefulWidget {
 }
 
 class _BlockAreaState extends State<BlockArea> {
+  late HomeController controller;
+
   @override
   void initState() {
+    controller = Get.find();
     widget.blockSet.onUpdate = () {
-      setState(() {});
+      setState(() {
+        widget.blockSet.mediaGenerator.imageList = controller.imagesList;
+      });
     };
     super.initState();
   }
@@ -54,9 +64,11 @@ class _BlockAreaState extends State<BlockArea> {
 class BlockAreaControlIcons extends StatelessWidget {
   /// Control Icons which popup as needed inside the block area.
   /// ie: linking, ordering, deleting, etc.
-  const BlockAreaControlIcons({required this.blockSet, super.key});
+  BlockAreaControlIcons({required this.blockSet, super.key});
 
   final BlockSet blockSet;
+
+  final HomeController controller = Get.find();
 
   @override
   Widget build(BuildContext context) {
@@ -116,7 +128,11 @@ class BlockAreaControlIcons extends StatelessWidget {
               children: [
                 ControlButton(
                     icon: Icons.refresh,
-                    function: blockSet.randomEmoji,
+                    function: () {
+                      blockSet.randomMedia(controller.imagesList.isNotEmpty
+                          ? true
+                          : Random().nextBool());
+                    },
                     tooltip: "Random emojis"),
                 ControlButton(
                     icon: Icons.search,
@@ -128,7 +144,7 @@ class BlockAreaControlIcons extends StatelessWidget {
               children: [
                 ControlButton(
                     icon: Icons.animation,
-                    function: blockSet.animateEmoji,
+                    function: blockSet.animateMedia,
                     tooltip: "Animate emojis"),
               ],
             )

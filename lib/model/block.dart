@@ -4,10 +4,10 @@
 import 'dart:developer' as developer;
 import 'dart:math';
 
-import 'package:emoji_party/model/image.dart';
+import 'package:emoji_party/controller/home_controller.dart';
+import 'package:emoji_party/model/media.dart';
 import 'package:flutter/material.dart';
-
-import 'emoji.dart';
+import 'package:get/get.dart';
 
 class Block {
   /// Block class
@@ -16,9 +16,7 @@ class Block {
   /// and the method of generating the data.
   /// You can set a color and a name (some text to appear on the page)
   /// or you can generate some random data to play with
-  EmojiData emoji;
-
-  ImageData image;
+  Media media;
 
   /// Offset is the position of the block.
   /// It needs to be store in the data as it needs to be accessible
@@ -37,7 +35,7 @@ class Block {
   /// for example blocks in a selected group
   final BlockSet blockSet;
 
-  Block({required this.emoji, required this.blockSet, required this.image});
+  Block({required this.media, required this.blockSet});
 
   bool isSelected() {
     return blockSet.isBlockSelected(this);
@@ -119,16 +117,18 @@ class BlockSet {
   List<Block> selectedBlocks = [];
   List<BlockRelation> relations = [];
 
+  late Media media;
+
   /// Extra functionality and details about the block
   bool experimental = false;
 
-  final EmojiGenerator emojiGenerator = EmojiGenerator();
-
-  final ImageGenerator imageGenerator = ImageGenerator();
+  final MediaGenerator mediaGenerator = MediaGenerator();
 
   /// Scaffold key is needed in the block set to allow
   /// access to the scaffold. Specifically here for opening the emoji drawer
   final GlobalKey<ScaffoldState> scaffoldKey = GlobalKey<ScaffoldState>();
+
+  final HomeController controller = Get.find();
 
   /// When the block set does something that requires a widget rebuild
   /// It also calls this function.
@@ -173,7 +173,7 @@ class BlockSet {
       if (blockIsInside(block, allBlocks[index])) {
         if (experimental) {
           developer.log(
-              '${block.emoji.emoji} 🔼 ${allBlocks[index].emoji.emoji}',
+              '${block.media.media} 🔼 ${allBlocks[index].media.media}',
               name: "piggyBack");
         }
 
@@ -192,7 +192,7 @@ class BlockSet {
       if (blockIsInside(allBlocks[index], block)) {
         if (experimental) {
           developer.log(
-              '${block.emoji.emoji} 🔽 ${allBlocks[index].emoji.emoji}',
+              '${block.media.media} 🔽 ${allBlocks[index].media.media}',
               name: "piggyBack");
         }
         allBlocks.remove(block);
@@ -287,11 +287,11 @@ class BlockSet {
 
     if (experimental) {
       developer.log(
-          '${a.emoji.emoji}'
+          '${a.media.media}'
           '(${a.offset.dx}, ${a.offset.dx + a.size.width})'
           '(${a.offset.dy}, ${a.offset.dy + a.size.height})'
           ' intersects '
-          '${b.emoji.emoji}'
+          '${b.media.media}'
           '(${b.offset.dx}, ${b.offset.dx + b.size.width})'
           '(${b.offset.dy}, ${b.offset.dy + b.size.height})',
           name: "piggyBack");
@@ -299,12 +299,22 @@ class BlockSet {
     return true;
   }
 
+  /// [mediaType] will specify which type of media is being rendered
+  /// 0 -> Emoji , 1 -> Image
   void addBlock() {
+    bool mediaType;
+    if (controller.imagesList.isEmpty) {
+      mediaType = false;
+    } else {
+      mediaType = true;
+    }
+
     /// Add a block to the list of blocks
     allBlocks.add(Block(
-        emoji: emojiGenerator.randomEmoji(),
-        blockSet: this,
-        image: ImageData(imageName: '', animated: false, imageType: '')));
+      media: mediaGenerator.randomMedia(mediaType),
+      blockSet: this,
+    ));
+
     updateCallback();
   }
 
@@ -415,29 +425,31 @@ class BlockSet {
     updateCallback();
   }
 
-  void randomEmoji() {
+  void randomMedia(bool mediaType) {
+    controller.imagesList.isNotEmpty ? true : false;
+
     /// Re-roll the emoji, in the same place in the stack
     for (Block block in selectedBlocks) {
-      block.emoji = emojiGenerator.randomEmoji();
+      block.media = mediaGenerator.randomMedia(mediaType);
     }
     updateCallback();
   }
 
-  void changeEmoji(String emojiName) {
+  void changeMedia(String name, bool mediaType) {
     /// Sets the emoji to the one matching the name
     for (Block block in selectedBlocks) {
-      block.emoji = emojiGenerator.getEmoji(emojiName);
+      block.media = mediaGenerator.changeMedia(name, mediaType);
     }
     updateCallback();
   }
 
-  void animateEmoji() {
+  void animateMedia() {
     /// Get the animation state of the first emoji
-    bool isAnimated = selectedBlocks.first.emoji.animated;
+    bool isAnimated = selectedBlocks.first.media.animated!;
 
     for (Block block in selectedBlocks) {
       /// apply the opposite of that state to all selected.
-      block.emoji.animated = !isAnimated;
+      block.media.animated = !isAnimated;
     }
     updateCallback();
   }
@@ -533,10 +545,10 @@ class BlockSet {
         r.thatBlock == b);
 
     if (matching.isEmpty) {
-      developer.log("linking ${a.emoji.emoji} to ${b.emoji.emoji}");
+      developer.log("linking ${a.media.media} to ${b.media.media}");
       relations.add(BlockRelation(a, BlockRelationType.hasReceiver, b));
     } else {
-      developer.log("unlinking ${a.emoji.emoji} to ${b.emoji.emoji}");
+      developer.log("unlinking ${a.media.media} to ${b.media.media}");
       relations.removeWhere((link) => matching.contains(link));
     }
   }

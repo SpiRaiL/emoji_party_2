@@ -1,9 +1,10 @@
 import 'dart:convert';
+import 'dart:developer' as developer;
 import 'dart:math';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_emoji/flutter_emoji.dart';
-import 'dart:developer' as developer;
 
 class EmojiData {
   Color color;
@@ -63,7 +64,7 @@ class EmojiGenerator {
     // String emoji = emojiList[index];
     // String emojiName = emojiNames[index];
 
-    developer.log("Generated: $emojiName - $emoji", name: "emoji");
+    // developer.log("Generated: $emojiName - $emoji", name: "emoji");
 
     return EmojiData(color: color, emoji: emoji, emojiName: emojiName);
   }

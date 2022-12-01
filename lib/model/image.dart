@@ -3,13 +3,15 @@ import 'dart:math';
 
 class ImageData {
   String? imageName;
+  String? image;
   bool? animated;
   String? imageType;
 
-  ImageData({this.imageName, this.animated, this.imageType});
+  ImageData({this.imageName, this.image, this.animated, this.imageType});
 
   ImageData.fromJson(Map<String, dynamic> json) {
     imageName = json['image_name'];
+    image = json['image'];
     animated = json['animated'];
     imageType = json['image_type'];
   }
@@ -17,6 +19,7 @@ class ImageData {
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = <String, dynamic>{};
     data['image_name'] = imageName;
+    data['image'] = image;
     data['animated'] = animated;
     data['image_type'] = imageType;
     return data;
@@ -24,7 +27,6 @@ class ImageData {
 }
 
 class ImageGenerator {
-  /// List of images from assets
   List<String> imageList = [];
 
   ImageGenerator() {
@@ -38,7 +40,10 @@ class ImageGenerator {
   }
 
   ImageData getImage(String imageName) {
-    return ImageData(imageName: imageName);
+    return ImageData(
+        imageName: imageName,
+        image: "assets/custom/images/$imageName.png",
+        imageType: "png");
   }
 
   ImageData randomImage() {
@@ -47,9 +52,13 @@ class ImageGenerator {
 
     String imageName = imageList[index];
 
-    developer.log("Generated: $imageName", name: "image");
+    developer.log("Generated: $imageName - assets/custom/images/$imageName.png",
+        name: "image");
 
-    return ImageData(imageName: imageName);
+    return ImageData(
+        image: "assets/custom/images/$imageName.png",
+        imageName: imageName,
+        imageType: "png");
   }
 
   String searchString = "";

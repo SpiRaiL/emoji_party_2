@@ -1,6 +1,8 @@
 import 'dart:math';
 
+import 'package:emoji_party/controller/home_controller.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
 import '../model/block.dart';
 
@@ -20,16 +22,17 @@ class _BlockWidgetState extends State<BlockWidget>
 
   late final Block block;
 
-  static const double resizeBorderWidth = 20;
-
   /// [AnimationController] for animation functionality
   late AnimationController _controller;
 
   late Animation<double> animation;
 
+  late HomeController controller;
+
   @override
   void initState() {
     block = widget.block;
+    controller = Get.find();
 
     _controller = AnimationController(
       duration: const Duration(seconds: 5),
@@ -40,6 +43,16 @@ class _BlockWidgetState extends State<BlockWidget>
         Tween<double>(begin: 0, end: (45 * pi / 180)).animate(_controller);
 
     super.initState();
+  }
+
+  bool getAnimatedImage() {
+    if (controller.imagesList
+        .contains(block.media.media!.replaceAll("png", "gif"))) {
+      return true;
+    } else {
+      return false;
+    }
+    // block.media.media!.replaceAll("png", "gif");
   }
 
   @override
@@ -55,7 +68,7 @@ class _BlockWidgetState extends State<BlockWidget>
       child: Container(
         /// Allows box decoration and padding
         decoration: BoxDecoration(
-          color: block.emoji.color,
+          color: block.media.color,
 
           /// The block boarder is only highlighted if the block is selected
           border: Border.all(
@@ -79,23 +92,53 @@ class _BlockWidgetState extends State<BlockWidget>
         padding: const EdgeInsets.all(5),
         child: Center(
           child: SizedBox(
-            width: 50,
-            height: 50,
+            width: 70,
+            height: 70,
             child: FittedBox(
               fit: BoxFit.contain,
-              child: AnimatedBuilder(
-                animation: animation,
-                builder: (BuildContext context, Widget? child) =>
-                    Transform.rotate(
-                  angle: block.emoji.animated ? animation.value : 0,
-                  child: Tooltip(
-                    message: block.emoji.emojiName,
-                    child: Text(
-                      block.emoji.emoji,
-                    ),
-                  ),
-                ),
-              ),
+              child: controller.imagesList.isEmpty
+                  ? AnimatedBuilder(
+                      animation: animation,
+                      builder: (BuildContext context, Widget? child) =>
+                          Transform.rotate(
+                        angle: block.media.animated! ? animation.value : 0,
+                        child: Tooltip(
+                          message: block.media.name,
+                          child: Text(block.media.media!),
+                        ),
+                      ),
+                    )
+                  : block.media.mediaType == "image"
+                      ? block.media.animated! && getAnimatedImage()
+                          ? Tooltip(
+                              message: block.media.name,
+                              child: Image.asset(block.media.animated!
+                                  ? block.media.media!.replaceAll("png", "gif")
+                                  : block.media.media!),
+                            )
+                          : AnimatedBuilder(
+                              animation: animation,
+                              builder: (BuildContext context, Widget? child) =>
+                                  Transform.rotate(
+                                angle:
+                                    block.media.animated! ? animation.value : 0,
+                                child: Tooltip(
+                                  message: block.media.name,
+                                  child: Image.asset(block.media.media!),
+                                ),
+                              ),
+                            )
+                      : AnimatedBuilder(
+                          animation: animation,
+                          builder: (BuildContext context, Widget? child) =>
+                              Transform.rotate(
+                            angle: block.media.animated! ? animation.value : 0,
+                            child: Tooltip(
+                              message: block.media.name,
+                              child: Text(block.media.media!),
+                            ),
+                          ),
+                        ),
             ),
           ),
         ),
