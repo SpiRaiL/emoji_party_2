@@ -1,8 +1,6 @@
 import 'dart:math';
 
-import 'package:emoji_party/controller/home_controller.dart';
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 
 import '../model/block.dart';
 
@@ -27,12 +25,9 @@ class _BlockWidgetState extends State<BlockWidget>
 
   late Animation<double> animation;
 
-  late HomeController controller;
-
   @override
   void initState() {
     block = widget.block;
-    controller = Get.find();
 
     _controller = AnimationController(
       duration: const Duration(seconds: 5),
@@ -46,13 +41,12 @@ class _BlockWidgetState extends State<BlockWidget>
   }
 
   bool getAnimatedImage() {
-    if (controller.imagesList
+    if (block.blockSet.mediaGenerator.imageList
         .contains(block.media.media!.replaceAll("png", "gif"))) {
       return true;
     } else {
       return false;
     }
-    // block.media.media!.replaceAll("png", "gif");
   }
 
   @override
@@ -96,7 +90,7 @@ class _BlockWidgetState extends State<BlockWidget>
             height: 70,
             child: FittedBox(
               fit: BoxFit.contain,
-              child: controller.imagesList.isEmpty
+              child: block.blockSet.mediaGenerator.imageList.isEmpty
                   ? AnimatedBuilder(
                       animation: animation,
                       builder: (BuildContext context, Widget? child) =>

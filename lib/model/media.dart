@@ -2,11 +2,9 @@ import 'dart:convert';
 import 'dart:developer' as developer;
 import 'dart:math';
 
-import 'package:emoji_party/controller/home_controller.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_emoji/flutter_emoji.dart';
-import 'package:get/get.dart';
 
 class Media {
   Color? color;
@@ -45,13 +43,15 @@ class Media {
 
 class MediaGenerator {
   /// List of images from assets
+  /// /// Asset media list [png and gif images from assets]
   List<String> imageList = [];
+
+  List<String> imageName = [];
 
   /// A big list of emojis
   Map<String, dynamic> emojiMap = {};
 
   /// GetX controller
-  HomeController controller = Get.find();
 
   MediaGenerator() {
     buildEmojiMap();
@@ -120,9 +120,9 @@ class MediaGenerator {
           color: color, media: emoji, name: emojiName, mediaType: 'emoji');
     } else {
       /// Get a random index from the list.
-      int index = Random().nextInt(controller.imagesList.length);
+      int index = Random().nextInt(imageList.length);
 
-      String name = controller.imageName[index];
+      String name = imageName[index];
 
       developer.log("Generated: $name - assets/custom/images/$name.png",
           name: "image");
@@ -138,7 +138,7 @@ class MediaGenerator {
   String searchString = "";
   List<String> imagesMatchingSearchString() {
     /// Search functionality on the image list
-    return controller.imageName
+    return imageName
         .toSet()
         .where((image) => image.contains(searchString))
         .toList();

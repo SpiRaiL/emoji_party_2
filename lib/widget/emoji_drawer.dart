@@ -1,7 +1,5 @@
-import 'package:emoji_party/controller/home_controller.dart';
 import 'package:emoji_party/model/media.dart';
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 
 class EmojiDrawer extends StatefulWidget {
   /// A pop-up draw that lists all the emojis
@@ -31,8 +29,6 @@ class EmojiDrawer extends StatefulWidget {
 class _EmojiDrawerState extends State<EmojiDrawer> {
   /// For filtering the emoji drawer
   final TextEditingController _editingController = TextEditingController();
-
-  final HomeController controller = Get.find();
 
   /// Boolean value to check if search string exist
   bool imageExist = true;
@@ -89,7 +85,7 @@ class _EmojiDrawerState extends State<EmojiDrawer> {
                               BorderRadius.all(Radius.circular(25.0)))),
                 ),
               ),
-              controller.imagesList.isNotEmpty
+              widget.mediaGenerator.imageList.isNotEmpty
                   ? Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [

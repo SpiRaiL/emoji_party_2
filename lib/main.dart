@@ -1,7 +1,5 @@
-import 'package:emoji_party/controller/home_controller.dart';
 import 'package:emoji_party/widget/emoji_drawer.dart';
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 
 import 'model/block.dart';
 import 'widget/block_area.dart';
@@ -25,12 +23,11 @@ class _MyAppState extends State<MyApp> {
   /// the the "name" which can be just an emoji
   /// and the background color.
 
-  final controller = Get.put(HomeController());
   late BlockSet blockSet = BlockSet();
 
   @override
   void initState() {
-    controller.loadImagesFromAssets(context);
+    blockSet.loadImagesFromAssets(context);
     super.initState();
   }
 
@@ -90,9 +87,7 @@ class _MyAppState extends State<MyApp> {
             }),
 
         /// Finally all the blocks on the screen
-        body: Obx(() => controller.isLoading.value
-            ? const CircularProgressIndicator()
-            : BlockArea(blockSet: blockSet)),
+        body: BlockArea(blockSet: blockSet),
       ),
     );
   }

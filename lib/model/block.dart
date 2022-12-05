@@ -1,13 +1,12 @@
 // A specific model class for just block data.
 // No widget building data
 
+import 'dart:convert';
 import 'dart:developer' as developer;
 import 'dart:math';
 
-import 'package:emoji_party/controller/home_controller.dart';
 import 'package:emoji_party/model/media.dart';
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 
 class Block {
   /// Block class
@@ -127,8 +126,6 @@ class BlockSet {
   /// Scaffold key is needed in the block set to allow
   /// access to the scaffold. Specifically here for opening the emoji drawer
   final GlobalKey<ScaffoldState> scaffoldKey = GlobalKey<ScaffoldState>();
-
-  final HomeController controller = Get.find();
 
   /// When the block set does something that requires a widget rebuild
   /// It also calls this function.
@@ -303,7 +300,7 @@ class BlockSet {
   /// 0 -> Emoji , 1 -> Image
   void addBlock() {
     bool mediaType;
-    if (controller.imagesList.isEmpty) {
+    if (mediaGenerator.imageList.isEmpty) {
       mediaType = false;
     } else {
       mediaType = true;
@@ -316,6 +313,31 @@ class BlockSet {
     ));
 
     updateCallback();
+  }
+
+  void loadImagesFromAssets(context) async {
+    try {
+      final manifestJson =
+          await DefaultAssetBundle.of(context).loadString('AssetManifest.json');
+
+      final imageList = json
+          .decode(manifestJson)
+          .keys
+          .where((String key) => key.startsWith('assets/custom/images'))
+          .toList();
+
+      mediaGenerator.imageList = imageList;
+
+      for (String text in imageList) {
+        mediaGenerator.imageName.add(text.split("/")[3].split(".")[0]);
+      }
+
+      mediaGenerator.imageName.toSet();
+    } catch (e) {
+      print(e);
+    } finally {
+      updateCallback();
+    }
   }
 
   void deleteSelected() {
@@ -426,7 +448,7 @@ class BlockSet {
   }
 
   void randomMedia(bool mediaType) {
-    controller.imagesList.isNotEmpty ? true : false;
+    mediaGenerator.imageList.isNotEmpty ? true : false;
 
     /// Re-roll the emoji, in the same place in the stack
     for (Block block in selectedBlocks) {
