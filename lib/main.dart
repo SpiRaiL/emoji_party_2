@@ -27,7 +27,10 @@ class _MyAppState extends State<MyApp> {
 
   @override
   void initState() {
+    /// Loading all media files from asset folder
+    /// restricting to [.png & .gif] files
     blockSet.loadImagesFromAssets(context);
+
     super.initState();
   }
 
@@ -76,13 +79,15 @@ class _MyAppState extends State<MyApp> {
         ),
         endDrawer: EmojiDrawer(
             mediaGenerator: blockSet.mediaGenerator,
-            callback: (emojiName, imageName) {
+            callback: (emojiName, path, imageName) {
+              /// if callback returns emoji to render on screen
               if (emojiName.length > 0) {
-                blockSet.changeMedia(emojiName, false);
-              } else if (imageName.length > 0) {
-                blockSet.changeMedia(imageName, true);
-              } else {
-                print("-- NO data");
+                blockSet.changeMedia(emojiName, '', false);
+              }
+
+              /// if callback returns image to render on screen
+              else if (imageName.length > 0) {
+                blockSet.changeMedia(imageName, path, true);
               }
             }),
 

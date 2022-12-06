@@ -120,10 +120,7 @@ class BlockAreaControlIcons extends StatelessWidget {
                 ControlButton(
                     icon: Icons.refresh,
                     function: () {
-                      blockSet.randomMedia(
-                          blockSet.mediaGenerator.imageList.isNotEmpty
-                              ? true
-                              : Random().nextBool());
+                      blockSet.randomMedia(Random().nextBool());
                     },
                     tooltip: "Random emojis"),
                 ControlButton(

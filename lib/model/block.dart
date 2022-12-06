@@ -299,16 +299,16 @@ class BlockSet {
   /// [mediaType] will specify which type of media is being rendered
   /// 0 -> Emoji , 1 -> Image
   void addBlock() {
-    bool mediaType;
+    bool isImage;
     if (mediaGenerator.imageList.isEmpty) {
-      mediaType = false;
+      isImage = false;
     } else {
-      mediaType = true;
+      isImage = true;
     }
 
     /// Add a block to the list of blocks
     allBlocks.add(Block(
-      media: mediaGenerator.randomMedia(mediaType),
+      media: mediaGenerator.randomMedia(isImage),
       blockSet: this,
     ));
 
@@ -317,21 +317,87 @@ class BlockSet {
 
   void loadImagesFromAssets(context) async {
     try {
+      /// Read [AssetManifest.json] file
+      /// as flutter compiler lists all files from app folders in [AssetManifest.json]
       final manifestJson =
           await DefaultAssetBundle.of(context).loadString('AssetManifest.json');
 
-      final imageList = json
+      /// Read all the files in targeted folder
+      /// [i-e. assets/custom/images]
+      final List<String> imageList = json
           .decode(manifestJson)
           .keys
           .where((String key) => key.startsWith('assets/custom/images'))
           .toList();
 
-      mediaGenerator.imageList = imageList;
+      /// Remove files with file extensions other than .png and .gif
+      /// Restricting to only select [PNG] and [GIF] files
+      imageList.removeWhere((element) =>
+          (element.split("/")[3].split(".")[1] != "png" &&
+              element.split("/")[3].split(".")[1] != "gif"));
 
-      for (String text in imageList) {
-        mediaGenerator.imageName.add(text.split("/")[3].split(".")[0]);
+      List<String> pngImages = [];
+      List<String> gifImages = [];
+
+      /// Separating media files based on mime type
+      /// to differentiate media for animation and rendering purpose
+      for (String image in imageList) {
+        if (image.split("/")[3].split(".")[1] == "png") {
+          pngImages.add(image.split(".")[0]);
+        } else if (image.split("/")[3].split(".")[1] == "gif") {
+          gifImages.add(image.split(".")[0]);
+        }
       }
 
+      /// Making sure to have an empty list
+      mediaGenerator.imageList.clear();
+
+      /// Getting common elements from both lists
+      final commonElements =
+          pngImages.toSet().intersection(gifImages.toSet()).toList();
+
+      /// Add common media Map [Map<String, String>] to image list map
+      /// Add the image list to MediaGenerator images list
+      /// to access it all over the app
+      for (var element in commonElements) {
+        mediaGenerator.imageList.add({
+          "name": element.split("/")[3],
+          "path": "$element.png",
+          "mime_type": "both"
+        });
+      }
+
+      /// remove common element form list [pngImages]
+      pngImages.removeWhere((element) => commonElements.contains(element));
+
+      /// Add png media Map [Map<String, String>] to image list map
+      for (var element in pngImages) {
+        mediaGenerator.imageList.add({
+          "name": element.split("/")[3],
+          "path": "$element.png",
+          "mime_type": "png"
+        });
+      }
+
+      /// remove common element form list [gifImages]
+      gifImages.removeWhere((element) => commonElements.contains(element));
+
+      /// Add gif media Map [Map<String, String>] to image list map
+      for (var element in gifImages) {
+        mediaGenerator.imageList.add({
+          "name": element.split("/")[3],
+          "path": "$element.gif",
+          "mime_type": "gif"
+        });
+      }
+
+      /// Getting names for the media files
+      /// to use it in the app
+      for (String image in imageList) {
+        mediaGenerator.imageName.add(image.split("/")[3].split(".")[0]);
+      }
+
+      /// Removing duplicate entries
       mediaGenerator.imageName.toSet();
     } catch (e) {
       print(e);
@@ -448,7 +514,7 @@ class BlockSet {
   }
 
   void randomMedia(bool mediaType) {
-    mediaGenerator.imageList.isNotEmpty ? true : false;
+    // mediaGenerator.imageList.isNotEmpty ? true : false;
 
     /// Re-roll the emoji, in the same place in the stack
     for (Block block in selectedBlocks) {
@@ -457,10 +523,10 @@ class BlockSet {
     updateCallback();
   }
 
-  void changeMedia(String name, bool mediaType) {
+  void changeMedia(String name, String path, bool isImage) {
     /// Sets the emoji to the one matching the name
     for (Block block in selectedBlocks) {
-      block.media = mediaGenerator.changeMedia(name, mediaType);
+      block.media = mediaGenerator.changeMedia(name, path, isImage);
     }
     updateCallback();
   }
