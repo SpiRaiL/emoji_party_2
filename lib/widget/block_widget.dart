@@ -99,8 +99,8 @@ class _BlockWidgetState extends State<BlockWidget>
         padding: const EdgeInsets.all(5),
         child: Center(
           child: SizedBox(
-            width: 70,
-            height: 70,
+            width: block.media.mediaType == "image" ? block.imageWidth : 70,
+            height: block.media.mediaType == "image" ? block.imageHeight : 70,
             child: FittedBox(
               fit: BoxFit.contain,
               child: block.blockSet.mediaGenerator.imageList.isEmpty

@@ -23,6 +23,14 @@ class Block {
   Offset offset = Offset.zero;
   Size size = const Size(100, 100);
 
+  /// default container sizes for the image
+  double imageWidth = 100;
+  double imageHeight = 100;
+
+  /// max container sizes for the image
+  double imageMaxWidth = 0;
+  double imageMaxHeight = 0;
+
   /// Experimental
   double rotation = 0;
 
