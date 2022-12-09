@@ -1,7 +1,8 @@
-import 'package:emoji_party/controller/home_controller.dart';
+import 'dart:ui' as ui;
+
 import 'package:emoji_party/model/media.dart';
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
+import 'package:flutter_gif/flutter_gif.dart';
 
 class EmojiDrawer extends StatefulWidget {
   /// A pop-up draw that lists all the emojis
@@ -28,20 +29,29 @@ class EmojiDrawer extends StatefulWidget {
   State<EmojiDrawer> createState() => _EmojiDrawerState();
 }
 
-class _EmojiDrawerState extends State<EmojiDrawer> {
+class _EmojiDrawerState extends State<EmojiDrawer>
+    with TickerProviderStateMixin {
   /// For filtering the emoji drawer
   final TextEditingController _editingController = TextEditingController();
-
-  final HomeController controller = Get.find();
 
   /// Boolean value to check if search string exist
   bool imageExist = true;
   bool emojiExist = true;
 
+  /// Renders gif image
+  /// [i-e] Will only draw first frame of gif image if
+  /// animation controller is not provided to it
+  /// Using in case of missing png file for any media
+  late FlutterGifController controller;
+
   @override
   void initState() {
     /// Setup the search string if there is one already typed in by the user
     _editingController.text = widget.mediaGenerator.searchString;
+
+    /// Gif controllers
+    controller = FlutterGifController(vsync: this);
+
     super.initState();
   }
 
@@ -89,7 +99,9 @@ class _EmojiDrawerState extends State<EmojiDrawer> {
                               BorderRadius.all(Radius.circular(25.0)))),
                 ),
               ),
-              controller.imagesList.isNotEmpty
+
+              /// Listing images if exists in asset folder
+              widget.mediaGenerator.imageList.isNotEmpty
                   ? Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -107,17 +119,23 @@ class _EmojiDrawerState extends State<EmojiDrawer> {
                               )
                             : const SizedBox(),
                         Column(
-                          /// for all the available emojis
-                          children:
-                              widget.mediaGenerator.imagesMatchingSearchString()
-
-                                  /// Make a clickable row
-                                  .map(
+                          /// for all the available images
+                          children: widget.mediaGenerator
+                              .imagesMatchingSearchString()
+                              .map(
                             (image) {
                               /// Images name with path details
                               String imageString =
                                   "assets/custom/images/$image.png";
 
+                              /// Check and return if image exists in image list
+                              List<Map<String, String>> valueExists = widget
+                                  .mediaGenerator.imageList
+                                  .where((element) =>
+                                      element["path"] == imageString)
+                                  .toList();
+
+                              /// Make a clickable row
                               return InkWell(
                                 onHover: (bool value) {
                                   if (value) {
@@ -128,7 +146,12 @@ class _EmojiDrawerState extends State<EmojiDrawer> {
                                   }
                                 },
                                 onTap: () {
-                                  widget.callback("", image);
+                                  widget.callback(
+                                      "",
+                                      valueExists.isNotEmpty
+                                          ? imageString
+                                          : "assets/custom/images/$image.gif",
+                                      image);
 
                                   // close the drawer
                                   if (widget.closeDrawerOnSelect) {
@@ -142,7 +165,13 @@ class _EmojiDrawerState extends State<EmojiDrawer> {
                                       height: 60,
                                       child: FittedBox(
                                         fit: BoxFit.contain,
-                                        child: Image.asset(imageString),
+                                        child: valueExists.isNotEmpty
+                                            ? Image.asset(imageString)
+                                            : GifImage(
+                                                controller: controller,
+                                                image: AssetImage(
+                                                    "assets/custom/images/$image.gif"),
+                                              ),
                                       ),
                                     ),
                                     Expanded(
@@ -157,6 +186,8 @@ class _EmojiDrawerState extends State<EmojiDrawer> {
                       ],
                     )
                   : Container(),
+
+              /// Listing images on top of emoji list
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -178,12 +209,13 @@ class _EmojiDrawerState extends State<EmojiDrawer> {
                     /// for all the available emojis
                     children: widget.mediaGenerator
                         .emojisMatchingSearchString()
-
-                        /// Make a clickable row
                         .map(
-                          (emoji) => InkWell(
+                          (emoji) =>
+
+                              /// Make a clickable row
+                              InkWell(
                             onTap: () {
-                              widget.callback(emoji.key, "");
+                              widget.callback(emoji.key, "", "");
 
                               // close the drawer
                               if (widget.closeDrawerOnSelect) {
@@ -211,6 +243,8 @@ class _EmojiDrawerState extends State<EmojiDrawer> {
                   ),
                 ],
               ),
+
+              /// If case of empty media
               !imageExist && !emojiExist
                   ? const Text(
                       'No data found',
@@ -227,4 +261,22 @@ class _EmojiDrawerState extends State<EmojiDrawer> {
       ),
     );
   }
+}
+
+class ImagePainter extends CustomPainter {
+  ImagePainter(this.image);
+  final ui.Image image;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = Colors.red
+      ..strokeWidth = 5
+      ..style = PaintingStyle.stroke;
+
+    canvas.drawImage(image, Offset.zero, paint);
+  }
+
+  @override
+  bool shouldRepaint(ImagePainter oldDelegate) => image != oldDelegate.image;
 }

@@ -1,8 +1,6 @@
 import 'dart:math';
 
-import 'package:emoji_party/controller/home_controller.dart';
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 
 import '../model/block.dart';
 import 'block_control.dart';
@@ -24,15 +22,10 @@ class BlockArea extends StatefulWidget {
 }
 
 class _BlockAreaState extends State<BlockArea> {
-  late HomeController controller;
-
   @override
   void initState() {
-    controller = Get.find();
     widget.blockSet.onUpdate = () {
-      setState(() {
-        widget.blockSet.mediaGenerator.imageList = controller.imagesList;
-      });
+      setState(() {});
     };
     super.initState();
   }
@@ -67,8 +60,6 @@ class BlockAreaControlIcons extends StatelessWidget {
   BlockAreaControlIcons({required this.blockSet, super.key});
 
   final BlockSet blockSet;
-
-  final HomeController controller = Get.find();
 
   @override
   Widget build(BuildContext context) {
@@ -129,9 +120,7 @@ class BlockAreaControlIcons extends StatelessWidget {
                 ControlButton(
                     icon: Icons.refresh,
                     function: () {
-                      blockSet.randomMedia(controller.imagesList.isNotEmpty
-                          ? true
-                          : Random().nextBool());
+                      blockSet.randomMedia(Random().nextBool());
                     },
                     tooltip: "Random emojis"),
                 ControlButton(

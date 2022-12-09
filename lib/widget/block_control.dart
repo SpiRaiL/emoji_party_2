@@ -28,6 +28,32 @@ class _BlockControlState extends State<BlockControl> {
   // The size of edge where the user can resize the widget
   final double sizeHandleSize = 20;
 
+  double width = 0.0;
+  double height = 0.0;
+
+  @override
+  void initState() {
+    if (widget.block.blockSet.mediaGenerator.imageList.isNotEmpty) {
+      getImageDimensions();
+    }
+
+    super.initState();
+  }
+
+  getImageDimensions() async {
+    /// Getting default image size from assets
+    var image = await rootBundle
+        .load(widget.block.blockSet.mediaGenerator.imageList[0]["path"]!);
+
+    var decodedImage = await decodeImageFromList(image.buffer.asUint8List());
+    setState(() {
+      widget.block.imageMaxWidth = decodedImage.width.toDouble();
+      widget.block.imageHeight = decodedImage.height.toDouble();
+    });
+
+    widget.block.blockSet.updateCallback();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Positioned(
@@ -171,6 +197,7 @@ class _BlockControlState extends State<BlockControl> {
       SystemMouseCursors.resizeUpLeft,
       SystemMouseCursors.resizeUpRight
     ].contains(direction);
+
     return Positioned(
         left: left ? 0 : widget.block.size.width - sizeHandleSize,
         top: top ? 0 : widget.block.size.height - sizeHandleSize,
@@ -278,6 +305,16 @@ class _BlockControlState extends State<BlockControl> {
               block.size.width + details.delta.dx * (left ? -1 : 1)),
           max(minimumBlockSize,
               block.size.height + details.delta.dy * (up ? -1 : 1)));
+
+      /// Updating size of image widget
+      if (block.imageHeight < block.imageMaxHeight) {
+        block.imageHeight = block.imageHeight + 1;
+      }
+      if (block.imageWidth < block.imageMaxWidth) {
+        block.imageWidth = block.imageWidth + 1;
+      }
+
+      block.blockSet.updateCallback();
     });
   }
 }

@@ -1,7 +1,5 @@
-import 'package:emoji_party/controller/home_controller.dart';
 import 'package:emoji_party/widget/emoji_drawer.dart';
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 
 import 'model/block.dart';
 import 'widget/block_area.dart';
@@ -25,12 +23,14 @@ class _MyAppState extends State<MyApp> {
   /// the the "name" which can be just an emoji
   /// and the background color.
 
-  final controller = Get.put(HomeController());
   late BlockSet blockSet = BlockSet();
 
   @override
   void initState() {
-    controller.loadImagesFromAssets(context);
+    /// Loading all media files from asset folder
+    /// restricting to [.png & .gif] files
+    blockSet.loadImagesFromAssets(context);
+
     super.initState();
   }
 
@@ -79,20 +79,20 @@ class _MyAppState extends State<MyApp> {
         ),
         endDrawer: EmojiDrawer(
             mediaGenerator: blockSet.mediaGenerator,
-            callback: (emojiName, imageName) {
+            callback: (emojiName, path, imageName) {
+              /// if callback returns emoji to render on screen
               if (emojiName.length > 0) {
-                blockSet.changeMedia(emojiName, false);
-              } else if (imageName.length > 0) {
-                blockSet.changeMedia(imageName, true);
-              } else {
-                print("-- NO data");
+                blockSet.changeMedia(emojiName, '', false);
+              }
+
+              /// if callback returns image to render on screen
+              else if (imageName.length > 0) {
+                blockSet.changeMedia(imageName, path, true);
               }
             }),
 
         /// Finally all the blocks on the screen
-        body: Obx(() => controller.isLoading.value
-            ? const CircularProgressIndicator()
-            : BlockArea(blockSet: blockSet)),
+        body: BlockArea(blockSet: blockSet),
       ),
     );
   }
